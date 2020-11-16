@@ -1,4 +1,4 @@
-# terminal-setup
+# ZSH DotFiles.
 Initial setup script for OSX/UNIX terminal.
 
 ## One-Step Automated Install
