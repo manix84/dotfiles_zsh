@@ -1,0 +1,184 @@
+# Create a new directory and enter it
+function mkd() {
+	mkdir -p "$@" && cd "$@"
+}
+
+# Determine size of a file or total size of a directory
+function fs() {
+	if du -b /dev/null > /dev/null 2>&1; then
+		local arg=-sbh
+	else
+		local arg=-sh
+	fi
+	if [[ -n "$@" ]]; then
+		du $arg -- "$@"
+	else
+		du $arg .[^.]* *
+	fi
+}
+
+# Use Git’s colored diff when available
+hash git &>/dev/null
+if [ $? -eq 0 ]; then
+	function diff() {
+		git diff --no-index --color-words "$@"
+	}
+fi
+
+# CD to a directory and list it.
+function cdl() {
+    cd $1 && ls -lah
+}
+
+# Create a data URL from a file
+function dataurl() {
+	local mimeType=$(file -b --mime-type "$1")
+	if [[ $mimeType == text/* ]]; then
+		mimeType="${mimeType};charset=utf-8"
+	fi
+	echo "data:${mimeType};base64,$(openssl base64 -in "$1" | tr -d '\n')"
+}
+
+# Start an HTTP server from a directory, optionally specifying the port
+function server() {
+	local port="${1:-8000}"
+	sleep 1 && open "http://localhost:${port}/" &
+	# Set the default Content-Type to `text/plain` instead of `application/octet-stream`
+	# And serve everything as UTF-8 (although not technically correct, this doesn’t break anything for binary files)
+	python -c $'import SimpleHTTPServer;\nmap = SimpleHTTPServer.SimpleHTTPRequestHandler.extensions_map;\nmap[""] = "text/plain";\nfor key, value in map.items():\n\tmap[key] = value + ";charset=UTF-8";\nSimpleHTTPServer.test();' "$port"
+}
+
+# Start a PHP server from a directory, optionally specifying the port
+# (Requires PHP 5.4.0+.)
+function phpserver() {
+	local port="${1:-4000}"
+	local ip=$(ipconfig getifaddr en1)
+	sleep 1 && open "http://${ip}:${port}/" &
+	php -S "${ip}:${port}"
+}
+
+# Get gzipped file size
+function gz() {
+	echo "orig size (bytes): "
+	cat "$1" | wc -c
+	echo "gzipped size (bytes): "
+	gzip -c "$1" | wc -c
+}
+
+# Test if HTTP compression (RFC 2616 + SDCH) is enabled for a given URL.
+# Send a fake UA string for sites that sniff it instead of using the Accept-Encoding header. (Looking at you, ajax.googleapis.com!)
+function httpcompression() {
+	encoding="$(curl -LIs -H 'User-Agent: Mozilla/5 Gecko' -H 'Accept-Encoding: gzip,deflate,compress,sdch' "$1" | grep '^Content-Encoding:')" && echo "$1 is encoded using ${encoding#* }" || echo "$1 is not using any encoding"
+}
+
+# Syntax-highlight JSON strings or files
+# Usage: `json '{"foo":42}'` or `echo '{"foo":42}' | json`
+function json() {
+	if [ -t 0 ]; then # argument
+		python -mjson.tool <<< "$*" | pygmentize -l javascript
+	else # pipe
+		python -mjson.tool | pygmentize -l javascript
+	fi
+}
+
+# All the dig info
+function digga() {
+	dig +nocmd "$1" any +multiline +noall +answer
+}
+
+# Escape UTF-8 characters into their 3-byte format
+function escape() {
+	printf "\\\x%s" $(printf "$@" | xxd -p -c1 -u)
+	echo # newline
+}
+
+# Decode \x{ABCD}-style Unicode escape sequences
+function unidecode() {
+	perl -e "binmode(STDOUT, ':utf8'); print \"$@\""
+	echo # newline
+}
+
+# Get a character’s Unicode code point
+function codepoint() {
+	perl -e "use utf8; print sprintf('U+%04X', ord(\"$@\"))"
+	echo # newline
+}
+
+# Manually remove a downloaded app or file from the quarantine
+function unquarantine() {
+	for attribute in com.apple.metadata:kMDItemDownloadedDate com.apple.metadata:kMDItemWhereFroms com.apple.quarantine; do
+		xattr -r -d "$attribute" "$@"
+	done
+}
+
+# Usage: mount_ssh [your_username@]some.server.com:/path/to/mount "[Your Server Name]"
+function mount_ssh() {
+    # Ensure SSHFS is installed before trying to run any commands.
+    if ! type sshfs >/dev/null 2>&1; then
+        echo "SSHFS is required to run this command."
+        echo "If you have Homebrew installed, please run \"brew install sshfs\""
+        return
+    fi
+
+    local connectionPattern="((.*)@)?(.*)(:(.*))?"
+    local remoteHost
+    local friendlyName
+    if [[ -n "${1}" && ${1} =~ ${connectionPattern} ]]; then
+        remoteHost=${BASH_REMATCH[3]}
+        friendlyName=`expr "${remoteHost}" : '\([0-9A-Za-z_-]\{1,30\}\)'`
+    else
+        echo "A host name is required"
+        return
+    fi
+
+    # Auto requesting sudo access as it is required for the creation and alteration of the Network folder.
+    sudo -v
+
+    local directoryName=/Network/${friendlyName}
+    local volumeName="${friendlyName} (SSHFS)"
+    if [[ -n "${2}" ]]; then
+        local volumeName=${2}
+    fi
+
+    if [ -d ${directoryName} ]; then
+        read -p "\"${directoryName}\" already exists. Would you like to remount it? [y/N]: " yn
+        case $yn in
+            [Yy]* )
+                cd
+                sudo umount -f ${directoryName};;
+            * )
+                echo "Exiting...";
+                return;;
+        esac
+    fi
+
+    # An ugly chain of dependant commands. If the command previous to each fails, something has gone
+    #   wrong and we need to stop.
+    sudo mkdir -p ${directoryName} &&
+    sudo chown ${USER} ${directoryName} &&
+    sudo chmod 0755 ${directoryName} &&
+
+    sshfs ${1} ${directoryName} -o follow_symlinks,compression=yes,volname="${volumeName}" &&
+    cd ${directoryName} &&
+    echo "${remoteHost} mounted to ${directoryName}, named \"${volumeName}\"" && return
+
+    echo "${remoteHost} failed to mount."
+}
+
+# Search file(s) for keywords.
+function grok() {
+    # Display usage if no parameters given
+    if [[ -z "$@" ]]; then
+        echo -e " ${0##*/} <string> <file/path> - search recursively for keyword in files"
+        exit
+    fi
+
+    if [ -z "$2" ]; then
+        loc=$(pwd)
+    else
+        loc="$2"
+    fi
+
+    echo " Searching..."
+    grep -ilr "$@" "$loc" 2>&1 | grep -v "No such" | grep -v "Permission denied" | sed "s:^\.::g" | sed "s:$(pwd)::g" | sort | uniq
+}
