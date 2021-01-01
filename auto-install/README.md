@@ -1,4 +1,4 @@
-# Auto-Install
+# Auto-Install (WIP - SUPER not ready)
 Run the following to pull down and install these dotfiles automatically.
 
 ## One-Step Automated Install
