@@ -19,15 +19,26 @@ was written for this script.
 
 DISCLAIMER
 
-function install_package() {}
+required_packages=[]
 
+sudo -v
+
+function install_package() {
+  sudo apt -yq install @[0]
+}
+function download_run_shell() {}
+
+
+install_package zsh
 // Find out downloader
 
 // Change shell to ZSH
-chsh -s $(which zsh)
+chsh -s "$(which zsh)"
 
 // Install OhMyZSH
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 // Install OhMyZSH-BulletTrain
 wget --output-file=$ZSH_CUSTOM/themes/bullet-train.zsh-theme http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
+sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' .zshrc
+
