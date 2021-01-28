@@ -23,9 +23,9 @@ required_packages=[]
 
 sudo -v
 
-# function install_package() {
-#   sudo apt -yq install @[0]
-# }
+function install_package() {
+  sudo apt -yq install @[0]
+}
 # function download_run_shell() {}
 
 
