@@ -35,6 +35,9 @@ install_package zsh
 # Change shell to ZSH
 chsh -s "$(which zsh)"
 
+# Switch to ZSH
+zsh
+
 # Install OhMyZSH
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
