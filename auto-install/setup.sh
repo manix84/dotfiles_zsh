@@ -39,13 +39,13 @@ install_package git
 # Change shell to ZSH
 chsh -s "$(which zsh)"
 
-# Switch to ZSH
-zsh
-
 # Install OhMyZSH
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # Install OhMyZSH-BulletTrain
 wget --output-document=$ZSH_CUSTOM/themes/bullet-train.zsh-theme http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
 sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' .zshrc
+
+# Switch to ZSH
+zsh
 
