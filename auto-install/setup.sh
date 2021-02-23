@@ -28,9 +28,13 @@ function install_package {
 }
 # function download_run_shell {}
 
-
+# Install ZSH
 install_package zsh
+# Install GIT
+install_package git
+
 # Find out downloader
+# find_download_app()
 
 # Change shell to ZSH
 chsh -s "$(which zsh)"
