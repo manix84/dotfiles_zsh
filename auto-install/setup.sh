@@ -32,6 +32,8 @@ function install_package {
 install_package zsh
 # Install GIT
 install_package git
+# Install NeoFetch (should be optional)
+install_package neofetch
 
 # Find out downloader
 # find_download_app()
