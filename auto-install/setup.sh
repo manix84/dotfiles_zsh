@@ -39,14 +39,14 @@ install_package neofetch
 # find_download_app()
 
 # Change shell to ZSH
-chsh -s "$(which zsh)"
+# chsh -s "$(which zsh)"
 
 # Install OhMyZSH
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # Install OhMyZSH-BulletTrain
 wget --output-document=$ZSH_CUSTOM/themes/bullet-train.zsh-theme http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
-sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' .zshrc
+sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' ~/.zshrc
 
 # Switch to ZSH
 zsh
