@@ -51,6 +51,11 @@ wait $INSTALL_PID
 wget --output-document=$ZSH_CUSTOM/themes/bullet-train.zsh-theme http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
 sed -i".backup" 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' ~/.zshrc
 
+### Install MOTD
+echo "printf '\033[2J'\nneofetch" > ~/.motd
+echo "\nif [ -f ~/.motd ]; then\n  source ~/.motd\nfi" >> ~/.zshrc
+sudo chown 0700 ~/.motd
+
 ### Switch to ZSH
 zsh
 
