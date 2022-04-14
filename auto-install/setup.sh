@@ -23,31 +23,32 @@ required_packages=[]
 
 sudo -v
 
-function install_package {
-  sudo apt -yq install @[0]
-}
+# function install_package {
+#   sudo apt -yq install @[0]
+# }
 # function download_run_shell {}
 
-# Install ZSH
-install_package zsh
-# Install GIT
-install_package git
-# Install NeoFetch (should be optional)
-install_package neofetch
+### Install ZSH
+# install_package zsh
+### Install GIT
+# install_package git
+### Install NeoFetch (should be optional)
+# install_package neofetch
+sudo apt -yq install zsh git neofetch wget
 
-# Find out downloader
+### Find out downloader
 # find_download_app()
 
-# Change shell to ZSH
+### Change shell to ZSH
 # chsh -s "$(which zsh)"
 
-# Install OhMyZSH
+###Install OhMyZSH
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-# Install OhMyZSH-BulletTrain
+### Install OhMyZSH-BulletTrain
 wget --output-document=$ZSH_CUSTOM/themes/bullet-train.zsh-theme http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
 sed -i ".backup" 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' ~/.zshrc
 
-# Switch to ZSH
+### Switch to ZSH
 zsh
 
