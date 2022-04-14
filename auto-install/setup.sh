@@ -45,7 +45,7 @@ sudo apt install -y -qq zsh git neofetch wget
 ###Install OhMyZSH
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" &
 INSTALL_PID=$!
-wait INSTALL_PID
+wait $INSTALL_PID
 
 ### Install OhMyZSH-BulletTrain
 wget --output-document=$ZSH_CUSTOM/themes/bullet-train.zsh-theme http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
