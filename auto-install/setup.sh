@@ -21,8 +21,10 @@ DISCLAIMER
 
 required_packages=[]
 
-sudo -v
+### Force SUDO Authentication
+sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
 
+### Package Installer
 # function install_package {
 #   sudo apt -y install -qq @[0]
 # }
