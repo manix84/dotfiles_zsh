@@ -41,9 +41,6 @@ sudo apt install -y -qq zsh git neofetch wget
 ### Find out downloader
 # find_download_app()
 
-### Change shell to ZSH
-# chsh -s "$(which zsh)"
-
 ###Install OhMyZSH
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" &
 INSTALL_PID=$!
@@ -61,4 +58,7 @@ sudo chown 0700 ~/.motd
 
 ### Switch to ZSH
 zsh
+
+### Change shell to ZSH
+chsh -s "$(which zsh)"
 
