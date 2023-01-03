@@ -34,9 +34,11 @@ sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
 # install_package zsh
 ### Install GIT
 # install_package git
+### Install unZIP
+# install_package unzip
 ### Install NeoFetch (should be optional)
 # install_package neofetch
-sudo apt install -y -qq zsh git neofetch wget
+sudo apt install -y -qq zsh git neofetch wget unzip
 
 ### Find out downloader
 # find_download_app()
@@ -62,6 +64,10 @@ sed -i 's/# info "Local IP"/info "Local IP"/g' ~/.config/neofetch/config.conf
 sed -i 's/# info "Public IP"/info "Public IP"/g' ~/.config/neofetch/config.conf
 sed -i 's/# info "CPU Usage"/info "CPU Usage"/g' ~/.config/neofetch/config.conf
 sed -i 's/# info "Disk"/info "Disk"/g' ~/.config/neofetch/config.conf
+
+### Setup Nano ###
+curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
+cat /etc/nanorc >> ~/.nanorc
 
 ### Change shell to ZSH
 sudo chsh -s "$(which zsh)"
