@@ -56,9 +56,9 @@ echo "printf '\033[2J'\nneofetch" > ~/.motd
 echo "\nif [ -f ~/.motd ]; then\n  source ~/.motd\nfi" >> ~/.zshrc
 sudo chown 0700 ~/.motd
 
+### Change shell to ZSH
+sudo chsh -s "$(which zsh)"
+
 ### Switch to ZSH
 zsh
-
-### Change shell to ZSH
-chsh -s "$(which zsh)"
 
