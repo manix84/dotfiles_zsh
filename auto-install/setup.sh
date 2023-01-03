@@ -51,10 +51,17 @@ export ZSH_CUSTOM=~/.oh-my-zsh/custom
 wget --output-document=$ZSH_CUSTOM/themes/bullet-train.zsh-theme http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
 sed -i".backup" 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' ~/.zshrc
 
-### Install MOTD
+### Install MOTD - Neofetch
 echo "printf '\033[2J'\nneofetch" > ~/.motd
 echo "\nif [ -f ~/.motd ]; then\n  source ~/.motd\nfi" >> ~/.zshrc
 sudo chown 0700 ~/.motd
+
+### Setup Neofetch ###
+cp ~/.config/neofetch/config.conf ~/.config/neofetch/config.conf.backup
+sed -i 's/# info "Local IP"/info "Local IP"/g' ~/.config/neofetch/config.conf
+sed -i 's/# info "Public IP"/info "Public IP"/g' ~/.config/neofetch/config.conf
+sed -i 's/# info "CPU Usage"/info "CPU Usage"/g' ~/.config/neofetch/config.conf
+sed -i 's/# info "Disk"/info "Disk"/g' ~/.config/neofetch/config.conf
 
 ### Change shell to ZSH
 sudo chsh -s "$(which zsh)"
