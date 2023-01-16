@@ -74,7 +74,7 @@ curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
 cat /etc/nanorc >> ~/.nanorc
 
 ### Change shell to ZSH
-sudo chsh -s "$(which zsh)"
+chsh -s "$(which zsh)"
 
 ### Switch to ZSH
 zsh
