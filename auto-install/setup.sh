@@ -51,7 +51,11 @@ wait $INSTALL_PID
 ### Install OhMyZSH-BulletTrain
 export ZSH_CUSTOM=~/.oh-my-zsh/custom
 wget --output-document=$ZSH_CUSTOM/themes/bullet-train.zsh-theme http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
-sed -i".backup" 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' ~/.zshrc
+cp ~/.zshrc ~/.zshrc.backup
+sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' ~/.zshrc
+echo 'ENABLE_CORRECTION="true"' >>  ~/.zshrc
+echo 'DISABLE_UPDATE_PROMPT="true"' >> ~/.zshrc
+echo 'DISABLE_AUTO_UPDATE="false"' >> ~/.zshrc
 
 ### Install MOTD - Neofetch
 echo "printf '\033[2J'\nneofetch" > ~/.motd
