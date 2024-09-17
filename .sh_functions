@@ -1,0 +1,17 @@
+killport() {
+  if [ -z "$1" ]; then
+    echo "Usage: killport <port>"
+    return 1
+  fi
+
+  PORT=$1
+  PIDS=$(lsof -ti :$PORT)
+
+  if [ -z "$PIDS" ]; then
+    echo "No process is using port $PORT"
+  else
+    echo "Killing process(es) $PIDS on port $PORT"
+    # Safely handle multiple PIDs by splitting on spaces or newlines
+    echo "$PIDS" | xargs kill -9
+  fi
+}
