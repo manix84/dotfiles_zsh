@@ -92,7 +92,34 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+ENABLE_CORRECTION="true"
+DISABLE_UPDATE_PROMPT="true"
+DISABLE_AUTO_UPDATE="false"
 
 [ -f ~/.motd ] && ~/.motd
 
+BULLETTRAIN_PROMPT_ORDER=(
+  time
+  status
+  custom
+  context
+  dir
+  screen
+  perl
+  ruby
+  virtualenv
+  nvm
+  aws
+  go
+  rust
+  elixir
+  git
+  hg
+  cmd_exec_time
+)
+
+# Set up fzf key bindings and fuzzy completion
+source <(fzf --zsh)
+
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+test -e "${HOME}/.sh_functions" && source "${HOME}/.sh_functions"
