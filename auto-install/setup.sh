@@ -68,11 +68,15 @@ echo "\nif [ -f ~/.motd ]; then\n  source ~/.motd\nfi" >> ~/.zshrc
 sudo chown 0700 ~/.motd
 
 ### Setup Neofetch ###
-cp ~/.config/neofetch/config.conf ~/.config/neofetch/config.conf.backup
-sed -i 's/# info "Local IP"/info "Local IP"/g' ~/.config/neofetch/config.conf
-sed -i 's/# info "Public IP"/info "Public IP"/g' ~/.config/neofetch/config.conf
-sed -i 's/# info "CPU Usage"/info "CPU Usage"/g' ~/.config/neofetch/config.conf
-sed -i 's/# info "Disk"/info "Disk"/g' ~/.config/neofetch/config.conf
+# cp ~/.config/neofetch/config.conf ~/.config/neofetch/config.conf.backup
+# sed -i 's/# info "Local IP"/info "Local IP"/g' ~/.config/neofetch/config.conf
+# sed -i 's/# info "Public IP"/info "Public IP"/g' ~/.config/neofetch/config.conf
+# sed -i 's/# info "CPU Usage"/info "CPU Usage"/g' ~/.config/neofetch/config.conf
+# sed -i 's/# info "Disk"/info "Disk"/g' ~/.config/neofetch/config.conf
+
+### Setup FastFetch ###
+# mkdir -p ~/.config/fastfetch/
+# wget --output-document=~/.config/fastfetch/config.jsonc https://raw.githubusercontent.com/manix84/dotfiles_zsh/refs/heads/main/.config/fastfetch/config.jsonc
 
 ### Setup Nano ###
 curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
