@@ -30,15 +30,20 @@ sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
 # }
 # function download_run_shell {}
 
+# Add FastFetch package to Package Manager
+sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+
+sudo apt update -y
+
 ### Install ZSH
 # install_package zsh
 ### Install GIT
 # install_package git
 ### Install unZIP
 # install_package unzip
-### Install NeoFetch (should be optional)
-# install_package neofetch
-sudo apt install -y -qq zsh git neofetch wget unzip
+### Install FastFetch (should be optional)
+# install_package fastfetch
+sudo apt install -y -qq zsh git fastfetch wget unzip
 
 ### Find out downloader
 # find_download_app()
