@@ -1,0 +1,39 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "display",
+    "de",
+    "wm",
+    "wmtheme",
+    "theme",
+    "icons",
+    "font",
+    "cursor",
+    "terminal",
+    "terminalfont",
+    "cpu",
+    "gpu",
+    "memory",
+    "swap",
+    "disk",
+    "localip",
+    "battery",
+    "poweradapter",
+    "locale",
+    {
+      "type": "command",
+      "key": "VPN Status",
+      "text": "curl -s --connect-timeout 1 --retry 10 --retry-delay 0 -X POST https://www.privateinternetaccess.com/site-api/exposed-check -H \"Content-Type: application/json\" -d \"{\\\"ipAddress\\\":\\\"$(cat /tmp/publicIp.txt)\\\"}\" | jq -e '.status == false' > /dev/null && echo '\\033[32mProtected\\033[0m' || echo '\\033[31;5;7mProblem Found\\033[0m'"
+    },
+    "break",
+    "colors"
+  ]
+}
