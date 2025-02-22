@@ -31,12 +31,12 @@ sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
 # function download_run_shell {}
 
 # Ensure add-apt-repository is present.
-sudo apt-get install -y software-properties-common
+sudo apt-get install -y -qq software-properties-common
 
 # Add FastFetch package to Package Manager
-sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+sudo add-apt-repository -y -qq ppa:zhangsongcui3371/fastfetch
 
-sudo apt update -y
+sudo apt update -y -qq
 
 ### Install ZSH
 # install_package zsh
