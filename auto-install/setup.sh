@@ -34,7 +34,7 @@ sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
 sudo apt-get install -y -qq software-properties-common
 
 # Add FastFetch package to Package Manager
-sudo add-apt-repository -y -qq ppa:zhangsongcui3371/fastfetch
+sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
 
 sudo apt update -y -qq
 
