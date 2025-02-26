@@ -19,47 +19,193 @@ was written for this script.
 
 DISCLAIMER
 
-required_packages=[]
-
 ### Force SUDO Authentication
 sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
 
 ### Package Installer
-# function install_package {
-#   sudo apt -y install -qq @[0]
-# }
-# function download_run_shell {}
+install_package() {
+    local package_manager=""
+    
+    if command -v apt >/dev/null 2>&1; then
+        package_manager="apt"
+    elif command -v yum >/dev/null 2>&1; then
+        package_manager="yum"
+    elif command -v dnf >/dev/null 2>&1; then
+        package_manager="dnf"
+    elif command -v zypper >/dev/null 2>&1; then
+        package_manager="zypper"
+    elif command -v pacman >/dev/null 2>&1; then
+        package_manager="pacman"
+    elif command -v brew >/dev/null 2>&1; then
+        package_manager="brew"
+    elif command -v apk >/dev/null 2>&1; then
+        package_manager="apk"
+    else
+        echo "Error: No supported package manager found!" >&2
+        return 1
+    fi
+    
+    echo "Using $package_manager to install: $@"
+    case "$package_manager" in
+        apt)
+            sudo apt update && sudo apt install -y "$@"
+            ;;
+        yum)
+            sudo yum install -y "$@"
+            ;;
+        dnf)
+            sudo dnf install -y "$@"
+            ;;
+        zypper)
+            sudo zypper install -y "$@"
+            ;;
+        pacman)
+            sudo pacman -Sy --noconfirm "$@"
+            ;;
+        brew)
+            brew install "$@"
+            ;;
+        apk)
+            sudo apk add "$@"
+            ;;
+        *)
+            echo "Error: Unsupported package manager: $package_manager" >&2
+            return 1
+            ;;
+    esac
+}
 
-# Ensure add-apt-repository is present.
-sudo apt-get install -y -qq software-properties-common
+### File downloader
+download_file() {
+    local url="" output=""
+    local downloader=""
+    
+    # Parse arguments
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            --output=*)
+                output="${1#--output=}"
+                ;;
+            --output)
+                output="$2"
+                shift
+                ;;
+            *)
+                url="$1"
+                ;;
+        esac
+        shift
+    done
+    
+    if [[ -z "$url" ]]; then
+        echo "Error: No URL provided." >&2
+        return 1
+    fi
+    
+    # Determine available downloader
+    if command -v wget &>/dev/null; then
+        downloader="wget"
+    elif command -v curl &>/dev/null; then
+        downloader="curl"
+    elif command -v fetch &>/dev/null; then
+        downloader="fetch"
+    elif command -v aria2c &>/dev/null; then
+        downloader="aria2c"
+    elif command -v httpie &>/dev/null; then
+        downloader="http"
+    else
+        echo "Error: No supported download utility found (wget, curl, fetch, aria2c, httpie)." >&2
+        return 1
+    fi
+    
+    # Download file based on the selected tool
+    if [[ -n "$output" ]]; then
+        case "$downloader" in
+            wget)
+                wget --output-document="$output" "$url"
+                ;;
+            curl)
+                curl -o "$output" "$url"
+                ;;
+            fetch)
+                fetch -o "$output" "$url"
+                ;;
+            aria2c)
+                aria2c -o "$output" "$url"
+                ;;
+            http)
+                http --download "$url" --output "$output"
+                ;;
+        esac
+    else
+        case "$downloader" in
+            wget)
+                wget "$url"
+                ;;
+            curl)
+                curl -O "$url"
+                ;;
+            fetch)
+                fetch "$url"
+                ;;
+            aria2c)
+                aria2c "$url"
+                ;;
+            http)
+                http --download "$url"
+                ;;
+        esac
+    fi
+}
 
-# Add FastFetch package to Package Manager
-sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+### Execute Online Scripts
+execute_online_script() {
+    local url="$1"
+    local downloader=""
 
-sudo apt update -y -qq
+    # Determine which downloader is available
+    if command -v curl >/dev/null 2>&1; then
+        downloader="curl -fsSL"
+    elif command -v wget >/dev/null 2>&1; then
+        downloader="wget -qO-"
+    elif command -v fetch >/dev/null 2>&1; then
+        downloader="fetch -o -"
+    elif command -v http >/dev/null 2>&1; then
+        downloader="http --body"
+    elif command -v aria2c >/dev/null 2>&1; then
+        downloader="aria2c -q -o -"
+    elif command -v axel >/dev/null 2>&1; then
+        downloader="axel -o -"
+    elif command -v lftp >/dev/null 2>&1; then
+        downloader="lftp -c 'get -O -'"
+    else
+        echo "Error: No supported downloader found (curl, wget, fetch, http, aria2c, axel, lftp)" >&2
+        return 1
+    fi
 
-### Install ZSH
-# install_package zsh
-### Install GIT
-# install_package git
-### Install unZIP
-# install_package unzip
-### Install FastFetch (should be optional)
-# install_package fastfetch
-sudo apt install -y -qq zsh git fastfetch wget unzip
+    # Execute the script in a separate process and get its PID
+    bash -c "$($downloader \"$url\")" & 
+    pid=$!
+    echo $pid
+}
+
+
+install_package zsh git unqip fastfetch
 
 ### Find out downloader
 # find_download_app()
 
 ###Install OhMyZSH
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" &
-INSTALL_PID=$!
-wait $INSTALL_PID
+OMZSH_INSTALL_PID=$(execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)
+wait $OMZSH_INSTALL_PID
 
 ### Install OhMyZSH-BulletTrain
 export ZSH_CUSTOM=~/.oh-my-zsh/custom
-wget --output-document=$ZSH_CUSTOM/themes/bullet-train.zsh-theme http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
+
+download_file http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme --output=$ZSH_CUSTOM/themes/bullet-train.zsh-theme
+
 cp ~/.zshrc ~/.zshrc.backup
+
 sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' ~/.zshrc
 echo 'ENABLE_CORRECTION="true"' >>  ~/.zshrc
 echo 'DISABLE_UPDATE_PROMPT="true"' >> ~/.zshrc
@@ -82,7 +228,8 @@ sudo chown 0700 ~/.motd
 # wget --output-document=~/.config/fastfetch/config.jsonc https://raw.githubusercontent.com/manix84/dotfiles_zsh/refs/heads/main/.config/fastfetch/config.jsonc
 
 ### Setup Nano ###
-curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
+NANO_INSTALL_PID=$(execute_online_script https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh)
+wait $NANO_INSTALL_PID
 cat /etc/nanorc >> ~/.nanorc
 
 ### Change shell to ZSH
