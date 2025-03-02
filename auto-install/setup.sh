@@ -211,10 +211,11 @@ echo 'ENABLE_CORRECTION="true"' >>  ~/.zshrc
 echo 'DISABLE_UPDATE_PROMPT="true"' >> ~/.zshrc
 echo 'DISABLE_AUTO_UPDATE="false"' >> ~/.zshrc
 
-### Install MOTD - Neofetch
-echo "printf '\033[2J'\nneofetch" > ~/.motd
+### Install MOTD - FastFetch
+touch ~/.motd
+echo "printf '\033[2J'\nfastfetch" > ~/.motd
 echo "\nif [ -f ~/.motd ]; then\n  source ~/.motd\nfi" >> ~/.zshrc
-sudo chown 0700 ~/.motd
+sudo chmod 0700 ~/.motd
 
 ### Setup Neofetch ###
 # cp ~/.config/neofetch/config.conf ~/.config/neofetch/config.conf.backup
