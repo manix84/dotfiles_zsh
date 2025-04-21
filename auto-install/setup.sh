@@ -22,6 +22,33 @@ DISCLAIMER
 ### Force SUDO Authentication
 sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
 
+### Detect Platform
+detect_platform() {
+  unameOut="$(uname -s)"
+  arch="$(uname -m)"
+
+  case "${unameOut}" in
+    Darwin)
+      echo "macOS"
+      return
+      ;;
+    Linux)
+      if grep -qE "Raspberry Pi|BCM" /proc/cpuinfo 2>/dev/null; then
+        echo "raspberrypi"
+        return
+      elif [[ "$arch" == "arm"* || "$arch" == "aarch64" ]]; then
+        echo "arm-linux"
+        return
+      elif [[ "$arch" == "x86_64" || "$arch" == "i386" || "$arch" == "i686" ]]; then
+        echo "x86-linux"
+        return
+      fi
+      ;;
+  esac
+
+  echo "unknown"
+}
+
 ### Package Installer
 install_package() {
     local package_manager=""
@@ -188,6 +215,9 @@ execute_online_script() {
     pid=$!
     echo $pid
 }
+
+install_package software-properties-common
+
 
 
 install_package zsh git unqip fastfetch
