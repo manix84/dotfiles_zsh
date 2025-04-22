@@ -24,7 +24,7 @@ DISCLAIMER
 
 # === Logging ===
 LOGFILE=~/setup-$(date +%Y%m%d%H%M).log
-exec >>(tee -a "$LOGFILE") 2>&1
+exec > >(tee -a "$LOGFILE") 2>&1
 
 # === Globals ===
 ZSH_CUSTOM=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
