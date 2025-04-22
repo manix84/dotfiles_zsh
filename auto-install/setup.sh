@@ -232,7 +232,7 @@ fi
 install_package zsh git unzip
 
 ###Install OhMyZSH
-local OMZSH_INSTALL_PID=$(execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)
+OMZSH_INSTALL_PID=$(execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)
 wait $OMZSH_INSTALL_PID
 
 ### Install OhMyZSH-BulletTrain
