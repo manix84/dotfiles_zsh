@@ -225,7 +225,8 @@ if [[ "$(detect_platform)" == "raspberrypi" ]]; then
   download_file "https://github.com/fastfetch-cli/fastfetch/releases/download/$NEO_VERSION/fastfetch-linux-$CPU_ARCH.deb" --output=/tmp/fastfetch.deb &&
   cd /tmp &&
   sudo apt install ./fastfetch.deb
-else 
+else
+  echo "Detected platform: $(detect_platform)"
   install_package fastfetch
 fi
 
