@@ -218,9 +218,9 @@ execute_online_script() {
 
 install_package software-properties-common
 
-echo "Detected platform: $(detect_platform)"
   
 if [[ "$(detect_platform)" == "raspberrypi" ]]; then
+  echo "Detected platform: $(detect_platform)!!!!!"
   NEO_VERSION=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | jq -r '.name')
   CPU_ARCH=aarch64
 
@@ -228,7 +228,7 @@ if [[ "$(detect_platform)" == "raspberrypi" ]]; then
   cd /tmp &&
   sudo apt install ./fastfetch.deb
 else
-  echo "Detected platform: $(detect_platform)"
+  echo "Detected platform: $(detect_platform)xxxxx"
   # install_package fastfetch
 fi
 
