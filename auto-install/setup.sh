@@ -218,7 +218,7 @@ execute_online_script() {
 
 install_package software-properties-common
 
-if [ "$(detect_platform)" == "raspberrypi" ]; then
+if [[ "$(detect_platform)" == "raspberrypi" ]]; then
   local NEO_VERSION=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | jq -r '.name')
   local CPU_ARCH=aarch64
   
