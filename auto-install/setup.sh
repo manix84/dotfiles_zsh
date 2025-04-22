@@ -219,18 +219,17 @@ execute_online_script() {
 install_package software-properties-common
 
 if [[ "$(detect_platform)" == "raspberrypi" ]]; then
-  local NEO_VERSION=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | jq -r '.name')
-  local CPU_ARCH=aarch64
-  
-  download_file https://github.com/fastfetch-cli/fastfetch/releases/download/$NEO_VERSION/fastfetch-linux-$CPU_ARCH.deb --output=/tmp/fastfetch.deb &&
+  NEO_VERSION=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | jq -r '.name')
+  CPU_ARCH=aarch64
+
+  download_file "https://github.com/fastfetch-cli/fastfetch/releases/download/$NEO_VERSION/fastfetch-linux-$CPU_ARCH.deb" --output=/tmp/fastfetch.deb &&
   cd /tmp &&
   sudo apt install ./fastfetch.deb
+else 
+  install_package fastfetch
 fi
 
-install_package zsh git unqip fastfetch
-
-### Find out downloader
-# find_download_app()
+install_package zsh git unzip
 
 ###Install OhMyZSH
 local OMZSH_INSTALL_PID=$(execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)
