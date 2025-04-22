@@ -23,30 +23,43 @@ DISCLAIMER
 sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
 
 ### Detect Platform
-detect_platform() {
-  unameOut="$(uname -s)"
-  arch="$(uname -m)"
+detect_platform_arch() {
+  local os="$(uname -s)"
+  local arch="$(uname -m)"
 
-  case "${unameOut}" in
+  case "$os" in
     Darwin)
-      echo "macOS"
-      return
+      echo "macos-universal"
       ;;
     Linux)
-      if grep -qE "Raspberry Pi|BCM" /proc/cpuinfo 2>/dev/null; then
-        echo "raspberrypi"
-        return
-      elif [[ "$arch" == "arm"* || "$arch" == "aarch64" ]]; then
-        echo "arm-linux"
-        return
-      elif [[ "$arch" == "x86_64" || "$arch" == "i386" || "$arch" == "i686" ]]; then
-        echo "x86-linux"
-        return
-      fi
+      case "$arch" in
+        aarch64)
+          echo "linux-aarch64"
+          ;;
+        armv6l)
+          echo "linux-armv6l"
+          ;;
+        armv7l)
+          echo "linux-armv7l"
+          ;;
+        x86_64)
+          echo "linux-amd64"
+          ;;
+        ppc64le|riscv64|s390x)
+          echo "linux-$arch"
+          ;;
+        i386|i686)
+          echo "sunos-i386"  # Just for example — not likely common
+          ;;
+        *)
+          echo "unsupported"
+          ;;
+      esac
+      ;;
+    *)
+      echo "unsupported"
       ;;
   esac
-
-  echo "unknown"
 }
 
 ### Package Installer
@@ -217,20 +230,49 @@ execute_online_script() {
 }
 
 install_package software-properties-common
-
   
-if [[ "$(detect_platform)" == "raspberrypi" ]]; then
-  echo "Detected platform: $(detect_platform)!!!!!"
-  NEO_VERSION=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | jq -r '.name')
-  CPU_ARCH=aarch64
+install_fastfetch() {
+  local platform_arch
+  platform_arch=$(detect_platform_arch)
 
-  download_file "https://github.com/fastfetch-cli/fastfetch/releases/download/$NEO_VERSION/fastfetch-linux-$CPU_ARCH.deb" --output=/tmp/fastfetch.deb &&
-  cd /tmp &&
-  sudo apt install ./fastfetch.deb
-else
-  echo "Detected platform: $(detect_platform)xxxxx"
-  # install_package fastfetch
-fi
+  if [[ "$platform_arch" == "unsupported" ]]; then
+    echo "Unsupported platform or architecture: $(uname -s) / $(uname -m)"
+    return 1
+  fi
+
+  # macOS example
+  if [[ "$platform_arch" == "macos-universal" ]]; then
+    echo "macOS detected. Installing via brew..."
+    brew install fastfetch || {
+      echo "Homebrew install failed."
+      return 1
+    }
+    return 0
+  fi
+
+  # Get latest release tag
+  local version
+  version=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | jq -r '.name')
+
+  local asset_name="fastfetch-${platform_arch}.deb"
+  local download_url="https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/${asset_name}"
+
+  echo "Downloading: $download_url"
+  curl -L "$download_url" -o /tmp/fastfetch.deb || {
+    echo "Download failed."
+    return 1
+  }
+
+  echo "Installing fastfetch..."
+  sudo apt install -y /tmp/fastfetch.deb || {
+    echo "Install failed."
+    return 1
+  }
+
+  echo "fastfetch installed successfully!"
+}
+
+install_fastfetch
 
 install_package zsh git unzip
 
