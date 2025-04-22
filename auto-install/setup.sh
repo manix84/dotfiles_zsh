@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -euo pipefail
+IFS=$'\n\t'
+
 : <<'DISCLAIMER'
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -19,304 +22,151 @@ was written for this script.
 
 DISCLAIMER
 
-### Force SUDO Authentication
+# === Logging ===
+LOGFILE=~/setup-$(date +%Y%m%d%H%M).log
+exec > >(tee -a "$LOGFILE") 2>&1
+
+# === Globals ===
+ZSH_CUSTOM=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
+
+# === Sudo keep-alive ===
 sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
 
-### Detect Platform
+# === Helpers ===
 detect_platform_arch() {
   local os="$(uname -s)"
   local arch="$(uname -m)"
 
   case "$os" in
     Darwin)
-      echo "macos-universal"
-      ;;
+      echo "macos-universal";;
     Linux)
       case "$arch" in
-        aarch64)
-          echo "linux-aarch64"
-          ;;
-        armv6l)
-          echo "linux-armv6l"
-          ;;
-        armv7l)
-          echo "linux-armv7l"
-          ;;
-        x86_64)
-          echo "linux-amd64"
-          ;;
-        ppc64le|riscv64|s390x)
-          echo "linux-$arch"
-          ;;
-        i386|i686)
-          echo "sunos-i386"  # Just for example — not likely common
-          ;;
-        *)
-          echo "unsupported"
-          ;;
-      esac
-      ;;
-    *)
-      echo "unsupported"
-      ;;
+        aarch64) echo "linux-aarch64";;
+        armv6l) echo "linux-armv6l";;
+        armv7l) echo "linux-armv7l";;
+        x86_64) echo "linux-amd64";;
+        ppc64le|riscv64|s390x) echo "linux-$arch";;
+        i386|i686) echo "sunos-i386";;
+        *) echo "unsupported";;
+      esac;;
+    *) echo "unsupported";;
   esac
 }
 
-### Package Installer
 install_package() {
-    local package_manager=""
-    
-    if command -v apt >/dev/null 2>&1; then
-        package_manager="apt"
-    elif command -v yum >/dev/null 2>&1; then
-        package_manager="yum"
-    elif command -v dnf >/dev/null 2>&1; then
-        package_manager="dnf"
-    elif command -v zypper >/dev/null 2>&1; then
-        package_manager="zypper"
-    elif command -v pacman >/dev/null 2>&1; then
-        package_manager="pacman"
-    elif command -v brew >/dev/null 2>&1; then
-        package_manager="brew"
-    elif command -v apk >/dev/null 2>&1; then
-        package_manager="apk"
-    else
-        echo "Error: No supported package manager found!" >&2
-        return 1
-    fi
-    
-    echo "Using $package_manager to install: $@"
-    case "$package_manager" in
-        apt)
-            sudo apt update && sudo apt install -y "$@"
-            ;;
-        yum)
-            sudo yum install -y "$@"
-            ;;
-        dnf)
-            sudo dnf install -y "$@"
-            ;;
-        zypper)
-            sudo zypper install -y "$@"
-            ;;
-        pacman)
-            sudo pacman -Sy --noconfirm "$@"
-            ;;
-        brew)
-            brew install "$@"
-            ;;
-        apk)
-            sudo apk add "$@"
-            ;;
-        *)
-            echo "Error: Unsupported package manager: $package_manager" >&2
-            return 1
-            ;;
-    esac
-}
+  local package_manager=""
 
-### File downloader
-download_file() {
-    local url="" output=""
-    local downloader=""
-    
-    # Parse arguments
-    while [[ "$#" -gt 0 ]]; do
-        case "$1" in
-            --output=*)
-                output="${1#--output=}"
-                ;;
-            --output)
-                output="$2"
-                shift
-                ;;
-            *)
-                url="$1"
-                ;;
-        esac
-        shift
-    done
-    
-    if [[ -z "$url" ]]; then
-        echo "Error: No URL provided." >&2
-        return 1
-    fi
-    
-    # Determine available downloader
-    if command -v wget &>/dev/null; then
-        downloader="wget"
-    elif command -v curl &>/dev/null; then
-        downloader="curl"
-    elif command -v fetch &>/dev/null; then
-        downloader="fetch"
-    elif command -v aria2c &>/dev/null; then
-        downloader="aria2c"
-    elif command -v httpie &>/dev/null; then
-        downloader="http"
-    else
-        echo "Error: No supported download utility found (wget, curl, fetch, aria2c, httpie)." >&2
-        return 1
-    fi
-    
-    # Download file based on the selected tool
-    if [[ -n "$output" ]]; then
-        case "$downloader" in
-            wget)
-                wget --output-document="$output" "$url"
-                ;;
-            curl)
-                curl -o "$output" "$url"
-                ;;
-            fetch)
-                fetch -o "$output" "$url"
-                ;;
-            aria2c)
-                aria2c -o "$output" "$url"
-                ;;
-            http)
-                http --download "$url" --output "$output"
-                ;;
-        esac
-    else
-        case "$downloader" in
-            wget)
-                wget "$url"
-                ;;
-            curl)
-                curl -O "$url"
-                ;;
-            fetch)
-                fetch "$url"
-                ;;
-            aria2c)
-                aria2c "$url"
-                ;;
-            http)
-                http --download "$url"
-                ;;
-        esac
-    fi
-}
-
-### Execute Online Scripts
-execute_online_script() {
-    local url="$1"
-    local downloader=""
-
-    # Determine which downloader is available
-    if command -v curl >/dev/null 2>&1; then
-        downloader="curl -fsSL"
-    elif command -v wget >/dev/null 2>&1; then
-        downloader="wget -qO-"
-    elif command -v fetch >/dev/null 2>&1; then
-        downloader="fetch -o -"
-    elif command -v http >/dev/null 2>&1; then
-        downloader="http --body"
-    elif command -v aria2c >/dev/null 2>&1; then
-        downloader="aria2c -q -o -"
-    elif command -v axel >/dev/null 2>&1; then
-        downloader="axel -o -"
-    elif command -v lftp >/dev/null 2>&1; then
-        downloader="lftp -c 'get -O -'"
-    else
-        echo "Error: No supported downloader found (curl, wget, fetch, http, aria2c, axel, lftp)" >&2
-        return 1
-    fi
-
-    # Execute the script in a separate process and get its PID
-    bash -c "$($downloader \"$url\")" & 
-    pid=$!
-    echo $pid
-}
-
-install_package software-properties-common
-  
-install_fastfetch() {
-  local platform_arch
-  platform_arch=$(detect_platform_arch)
-
-  if [[ "$platform_arch" == "unsupported" ]]; then
-    echo "Unsupported platform or architecture: $(uname -s) / $(uname -m)"
-    return 1
+  if command -v apt >/dev/null; then package_manager="apt"
+  elif command -v yum >/dev/null; then package_manager="yum"
+  elif command -v dnf >/dev/null; then package_manager="dnf"
+  elif command -v zypper >/dev/null; then package_manager="zypper"
+  elif command -v pacman >/dev/null; then package_manager="pacman"
+  elif command -v brew >/dev/null; then package_manager="brew"
+  elif command -v apk >/dev/null; then package_manager="apk"
+  else echo "No supported package manager found!" >&2; return 1
   fi
 
-  # macOS example
+  echo "Using $package_manager to install: $@"
+  case "$package_manager" in
+    apt) sudo apt update && sudo apt install -y "$@";;
+    yum) sudo yum install -y "$@";;
+    dnf) sudo dnf install -y "$@";;
+    zypper) sudo zypper install -y "$@";;
+    pacman) sudo pacman -Sy --noconfirm "$@";;
+    brew) brew install "$@";;
+    apk) sudo apk add "$@";;
+    *) echo "Unsupported package manager: $package_manager" >&2; return 1;;
+  esac
+}
+
+download_file() {
+  local url="" output=""
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --output=*) output="${1#--output=}";;
+      --output) output="$2"; shift;;
+      *) url="$1";;
+    esac
+    shift
+  done
+
+  [[ -z "$url" ]] && { echo "No URL provided." >&2; return 1; }
+
+  if command -v wget &>/dev/null; then wget -O "$output" "$url"
+  elif command -v curl &>/dev/null; then curl -Lo "$output" "$url"
+  else echo "No download utility found." >&2; return 1
+  fi
+}
+
+execute_online_script() {
+  local url="$1"
+  if command -v curl >/dev/null; then bash -c "$(curl -fsSL $url)"
+  elif command -v wget >/dev/null; then bash -c "$(wget -qO- $url)"
+  else echo "No supported downloader found." >&2; return 1
+  fi
+}
+
+append_to_zshrc() {
+  local line="$1"
+  grep -qxF "$line" ~/.zshrc || echo "$line" >> ~/.zshrc
+}
+
+install_fastfetch() {
+  local platform_arch=$(detect_platform_arch)
+  [[ "$platform_arch" == "unsupported" ]] && { echo "Unsupported platform."; return 1; }
+
   if [[ "$platform_arch" == "macos-universal" ]]; then
-    echo "macOS detected. Installing via brew..."
-    brew install fastfetch || {
-      echo "Homebrew install failed."
-      return 1
-    }
+    brew install fastfetch || return 1
     return 0
   fi
 
-  # Get latest release tag
-  local version
-  version=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | jq -r '.name')
-
+  local version=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | jq -r '.name')
   local asset_name="fastfetch-${platform_arch}.deb"
-  local download_url="https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/${asset_name}"
+  local url="https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/${asset_name}"
 
-  echo "Downloading: $download_url"
-  curl -L "$download_url" -o /tmp/fastfetch.deb || {
-    echo "Download failed."
-    return 1
-  }
-
-  echo "Installing fastfetch..."
-  sudo apt install -y /tmp/fastfetch.deb || {
-    echo "Install failed."
-    return 1
-  }
-
-  echo "fastfetch installed successfully!"
+  curl -L "$url" -o /tmp/fastfetch.deb && sudo apt install -y /tmp/fastfetch.deb && rm /tmp/fastfetch.deb
 }
 
+install_oh_my_zsh() {
+  RUNZSH=no KEEP_ZSHRC=yes execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+  download_file http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme --output=$ZSH_CUSTOM/themes/bullet-train.zsh-theme
+
+  [[ -f ~/.zshrc ]] && cp ~/.zshrc ~/.zshrc.backup
+  sed -i.bak 's/ZSH_THEME=\"[^"]*\"/ZSH_THEME=\"bullet-train\"/' ~/.zshrc
+
+  append_to_zshrc 'ENABLE_CORRECTION="true"'
+  append_to_zshrc 'DISABLE_UPDATE_PROMPT="true"'
+  append_to_zshrc 'DISABLE_AUTO_UPDATE="false"'
+
+  git clone https://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions || true
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting $ZSH_CUSTOM/plugins/zsh-syntax-highlighting || true
+  append_to_zshrc 'plugins=(git z zsh-autosuggestions zsh-syntax-highlighting)'
+}
+
+install_motd() {
+  echo -e "printf '\033[2J'\nfastfetch" > ~/.motd
+  append_to_zshrc "[[ -f ~/.motd ]] && source ~/.motd"
+  chmod 0700 ~/.motd
+}
+
+install_nano_highlight() {
+  execute_online_script https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh
+  [[ -f /etc/nanorc ]] && cat /etc/nanorc >> ~/.nanorc
+}
+
+change_shell_to_zsh() {
+  [[ $SHELL != *zsh ]] && chsh -s "$(which zsh)"
+}
+
+# === Main Install Steps ===
+install_package software-properties-common || true
+install_package zsh git unzip jq curl wget
+
 install_fastfetch
+install_oh_my_zsh
+install_motd
+install_nano_highlight
+change_shell_to_zsh
 
-install_package zsh git unzip
-
-###Install OhMyZSH
-OMZSH_INSTALL_PID=$(execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)
-wait $OMZSH_INSTALL_PID
-
-### Install OhMyZSH-BulletTrain
-export ZSH_CUSTOM=~/.oh-my-zsh/custom
-
-download_file http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme --output=$ZSH_CUSTOM/themes/bullet-train.zsh-theme
-
-cp ~/.zshrc ~/.zshrc.backup
-
-sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bullet-train"/g' ~/.zshrc
-echo 'ENABLE_CORRECTION="true"' >>  ~/.zshrc
-echo 'DISABLE_UPDATE_PROMPT="true"' >> ~/.zshrc
-echo 'DISABLE_AUTO_UPDATE="false"' >> ~/.zshrc
-
-### Install MOTD - FastFetch
-touch ~/.motd
-echo "printf '\033[2J'\nfastfetch" > ~/.motd
-echo "\nif [ -f ~/.motd ]; then\n  source ~/.motd\nfi" >> ~/.zshrc
-sudo chmod 0700 ~/.motd
-
-### Setup Neofetch ###
-# cp ~/.config/neofetch/config.conf ~/.config/neofetch/config.conf.backup
-# sed -i 's/# info "Local IP"/info "Local IP"/g' ~/.config/neofetch/config.conf
-# sed -i 's/# info "Public IP"/info "Public IP"/g' ~/.config/neofetch/config.conf
-# sed -i 's/# info "CPU Usage"/info "CPU Usage"/g' ~/.config/neofetch/config.conf
-# sed -i 's/# info "Disk"/info "Disk"/g' ~/.config/neofetch/config.conf
-
-### Setup FastFetch ###
-# mkdir -p ~/.config/fastfetch/
-# wget --output-document=~/.config/fastfetch/config.jsonc https://raw.githubusercontent.com/manix84/dotfiles_zsh/refs/heads/main/.config/fastfetch/config.jsonc
-
-### Setup Nano ###
-NANO_INSTALL_PID=$(execute_online_script https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh)
-wait $NANO_INSTALL_PID
-cat /etc/nanorc >> ~/.nanorc
-
-### Change shell to ZSH
-chsh -s "$(which zsh)"
-
-### Switch to ZSH
 zsh
-
