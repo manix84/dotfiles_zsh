@@ -17,6 +17,8 @@ This file highlights user-facing changes. For the complete history, see the
   legacy platforms.
 - Added automatic workstation and server Fastfetch profiles, with an explicit
   override for future profile variants.
+- Organized Fastfetch output into clear identity, session, performance,
+  storage, network, and power sections.
 - Added a clear error when a non-root user has no access to `sudo`.
 - Updated installation documentation with browser copy buttons and matching
   guidance in both README files.
