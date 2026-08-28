@@ -87,7 +87,7 @@ install_package() {
 
   echo "Using $package_manager to install: $@"
   case "$package_manager" in
-    apt) run_as_root apt update && run_as_root apt install -y "$@";;
+    apt) run_as_root apt-get update && run_as_root apt-get install -y "$@";;
     yum) run_as_root yum install -y "$@";;
     dnf) run_as_root dnf install -y "$@";;
     zypper) run_as_root zypper install -y "$@";;
@@ -96,6 +96,35 @@ install_package() {
     apk) run_as_root apk add "$@";;
     *) echo "Unsupported package manager: $package_manager" >&2; return 1;;
   esac
+}
+
+install_required_packages() {
+  local package=""
+  local missing_count=0
+  local missing_packages=()
+
+  for package in "$@"; do
+    if command -v "$package" >/dev/null 2>&1; then
+      echo "Already installed: $package"
+    else
+      missing_packages[$missing_count]="$package"
+      missing_count=$((missing_count + 1))
+    fi
+  done
+
+  if [[ $missing_count -eq 0 ]]; then
+    echo "All required packages are already available; skipping package installation."
+    return 0
+  fi
+
+  if ! install_package "${missing_packages[@]}"; then
+    if [[ -r /etc/os-release ]] && grep -Eq '^(VERSION_CODENAME=jessie|VERSION_ID="?8)' /etc/os-release; then
+      echo >&2
+      echo "Debian Jessie is end-of-life and its packages have moved to archive.debian.org." >&2
+      echo "Update this device's APT sources using the ReadyNAS instructions in the project README, then rerun the installer." >&2
+    fi
+    return 1
+  fi
 }
 
 download_file() {
@@ -131,6 +160,11 @@ append_to_zshrc() {
 }
 
 install_fastfetch() {
+  if command -v fastfetch >/dev/null 2>&1; then
+    echo "Already installed: fastfetch"
+    return 0
+  fi
+
   local platform_arch=$(detect_platform_arch)
   [[ "$platform_arch" == "unsupported" ]] && { echo "Unsupported platform."; return 1; }
 
@@ -179,12 +213,14 @@ change_shell_to_zsh() {
 
 # === Main Install Steps ===
 configure_privilege_command
-install_package software-properties-common || true
-install_package zsh git unzip jq curl wget
+install_required_packages zsh git unzip jq curl wget
 
-install_fastfetch
+if install_fastfetch; then
+  install_motd
+else
+  echo "Fastfetch installation failed; continuing without the Fastfetch MOTD." >&2
+fi
 install_oh_my_zsh
-install_motd
 install_nano_highlight
 change_shell_to_zsh
 

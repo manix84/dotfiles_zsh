@@ -39,6 +39,42 @@ Installing the required system packages needs administrator privileges:
   packages.
 
 The installer writes a timestamped log to the current user's home directory.
+Fastfetch and its MOTD are optional; a failure to install Fastfetch does not
+prevent the remaining shell setup from completing.
+
+### ReadyNAS OS 6 and Debian Jessie
+
+ReadyNAS OS 6 uses Debian Jessie. Jessie is end-of-life, so its packages are no
+longer available from the normal Debian mirrors. The installer skips package
+installation when all required commands are already present. If a package is
+missing, update the retired Debian entries in `/etc/apt/sources.list` from a root
+shell before running the installer again.
+
+First, back up the existing source list:
+
+```bash
+cp -a /etc/apt/sources.list /etc/apt/sources.list.before-jessie-archive
+```
+
+Replace only the retired Debian mirror URLs while leaving the ReadyNAS package
+source intact:
+
+```bash
+sed -i \
+  -e 's|http://security.debian.org|http://archive.debian.org/debian-security|' \
+  -e 's|http://mirrors.edge.kernel.org/debian|http://archive.debian.org/debian|' \
+  -e 's|http://mirrors.kernel.org/debian|http://archive.debian.org/debian|' \
+  /etc/apt/sources.list
+```
+
+Then refresh the archived package indexes:
+
+```bash
+apt-get -o Acquire::Check-Valid-Until=false update
+```
+
+Archived Jessie packages no longer receive security updates. Upgrading the
+device to a supported platform remains preferable where possible.
 
 For additional details, see the [auto-install documentation](auto-install/README.md)
 or review the [installation script](auto-install/setup.sh).

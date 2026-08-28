@@ -11,6 +11,10 @@ This file highlights user-facing changes. For the complete history, see the
   sudo-less systems such as ReadyNAS.
 - Improved compatibility with the older Bash versions found on some NAS
   devices.
+- Avoided unnecessary package-manager calls when required commands are already
+  installed, with guidance for archived Debian Jessie repositories.
+- Made Fastfetch and its MOTD optional so they cannot abort the shell setup on
+  legacy platforms.
 - Added a clear error when a non-root user has no access to `sudo`.
 - Updated installation documentation with browser copy buttons and matching
   guidance in both README files.
