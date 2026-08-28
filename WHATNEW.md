@@ -17,6 +17,8 @@ This file highlights user-facing changes. For the complete history, see the
   access archived package repositories just to resolve a Fastfetch release.
 - Made Fastfetch and its MOTD optional so they cannot abort the shell setup on
   legacy platforms.
+- Skipped incompatible Fastfetch downloads on Debian Jessie and made existing
+  Oh My Zsh installations reusable on repeated installer runs.
 - Added automatic workstation and server Fastfetch profiles, with an explicit
   override for future profile variants.
 - Organized Fastfetch output into clear identity, session, performance,

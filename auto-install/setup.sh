@@ -27,13 +27,18 @@ LOGFILE=~/setup-$(date +%Y%m%d%H%M).log
 exec > >(tee -a "$LOGFILE") 2>&1
 
 # === Globals ===
-ZSH_CUSTOM=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
+ZSH_INSTALL_DIR=${ZSH:-$HOME/.oh-my-zsh}
+ZSH_CUSTOM=${ZSH_CUSTOM:-$ZSH_INSTALL_DIR/custom}
 USE_SUDO=false
 DOTFILES_REF=${DOTFILES_REF:-main}
 DOTFILES_RAW_URL="https://raw.githubusercontent.com/manix84/dotfiles_zsh/${DOTFILES_REF}"
 FASTFETCH_AVAILABLE=false
 
 # === Helpers ===
+is_debian_jessie() {
+  [[ -r /etc/os-release ]] && grep -Eq '^(VERSION_CODENAME=jessie|VERSION_ID="?8)' /etc/os-release
+}
+
 configure_privilege_command() {
   if [[ $EUID -eq 0 ]]; then
     echo "Running as root; sudo is not required."
@@ -121,7 +126,7 @@ install_required_packages() {
   fi
 
   if ! install_package "${missing_packages[@]}"; then
-    if [[ -r /etc/os-release ]] && grep -Eq '^(VERSION_CODENAME=jessie|VERSION_ID="?8)' /etc/os-release; then
+    if is_debian_jessie; then
       echo >&2
       echo "Debian Jessie is end-of-life and its packages have moved to archive.debian.org." >&2
       echo "Update this device's APT sources using the ReadyNAS instructions in the project README, then rerun the installer." >&2
@@ -173,6 +178,11 @@ install_fastfetch() {
     return 0
   fi
 
+  if is_debian_jessie; then
+    echo "Fastfetch requires a newer libc than Debian Jessie provides; skipping it." >&2
+    return 1
+  fi
+
   local platform_arch=$(detect_platform_arch)
   [[ "$platform_arch" == "unsupported" ]] && { echo "Unsupported platform."; return 1; }
 
@@ -197,7 +207,16 @@ install_fastfetch() {
 }
 
 install_oh_my_zsh() {
-  RUNZSH=no KEEP_ZSHRC=yes execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+  if [[ -f "$ZSH_INSTALL_DIR/oh-my-zsh.sh" ]]; then
+    echo "Already installed: Oh My Zsh ($ZSH_INSTALL_DIR)"
+  elif [[ -e "$ZSH_INSTALL_DIR" ]]; then
+    echo "The Oh My Zsh path exists but is not a valid installation: $ZSH_INSTALL_DIR" >&2
+    echo "Move it aside or set ZSH to a different installation path, then rerun the installer." >&2
+    return 1
+  else
+    ZSH="$ZSH_INSTALL_DIR" RUNZSH=no KEEP_ZSHRC=yes execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+  fi
+
   download_file http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme --output=$ZSH_CUSTOM/themes/bullet-train.zsh-theme
 
   [[ -f ~/.zshrc ]] && cp ~/.zshrc ~/.zshrc.backup

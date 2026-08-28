@@ -27,7 +27,8 @@ LOGFILE=~/setup-$(date +%Y%m%d%H%M).log
 exec > >(tee -a "$LOGFILE") 2>&1
 
 # === Globals ===
-ZSH_CUSTOM=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
+ZSH_INSTALL_DIR=${ZSH:-$HOME/.oh-my-zsh}
+ZSH_CUSTOM=${ZSH_CUSTOM:-$ZSH_INSTALL_DIR/custom}
 DOTFILES_REF=${DOTFILES_REF:-main}
 DOTFILES_RAW_URL="https://raw.githubusercontent.com/manix84/dotfiles_zsh/${DOTFILES_REF}"
 
@@ -91,7 +92,16 @@ backup_file_once() {
 }
 
 install_oh_my_zsh() {
-  RUNZSH=no KEEP_ZSHRC=yes execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+  if [[ -f "$ZSH_INSTALL_DIR/oh-my-zsh.sh" ]]; then
+    echo "Already installed: Oh My Zsh ($ZSH_INSTALL_DIR)"
+  elif [[ -e "$ZSH_INSTALL_DIR" ]]; then
+    echo "The Oh My Zsh path exists but is not a valid installation: $ZSH_INSTALL_DIR" >&2
+    echo "Move it aside or set ZSH to a different installation path, then rerun the installer." >&2
+    return 1
+  else
+    ZSH="$ZSH_INSTALL_DIR" RUNZSH=no KEEP_ZSHRC=yes execute_online_script https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+  fi
+
   download_file http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme --output=$ZSH_CUSTOM/themes/bullet-train.zsh-theme
 
   [[ -f ~/.zshrc ]] && cp ~/.zshrc ~/.zshrc.backup

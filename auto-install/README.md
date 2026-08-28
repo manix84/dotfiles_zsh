@@ -40,7 +40,12 @@ Installing the required system packages needs administrator privileges:
 
 The installer writes a timestamped log to the current user's home directory.
 Fastfetch and its MOTD are optional; a failure to install Fastfetch does not
-prevent the remaining shell setup from completing.
+prevent the remaining shell setup from completing. Fastfetch is skipped on
+Debian Jessie because current releases require a newer system C library.
+
+The installer is safe to rerun over a valid existing Oh My Zsh installation.
+An existing directory that does not contain Oh My Zsh is left untouched and
+reported for manual review.
 
 ### ReadyNAS OS 6 and Debian Jessie
 
