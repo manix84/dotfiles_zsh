@@ -28,11 +28,25 @@ exec > >(tee -a "$LOGFILE") 2>&1
 
 # === Globals ===
 ZSH_CUSTOM=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
-
-# === Sudo keep-alive ===
-sudo -v || { echo 'SUDO Authentication Failed' ; exit 1; }
+PRIVILEGE_COMMAND=()
 
 # === Helpers ===
+configure_privilege_command() {
+  if [[ $EUID -eq 0 ]]; then
+    echo "Running as root; sudo is not required."
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo -v || { echo "Sudo authentication failed." >&2; return 1; }
+    PRIVILEGE_COMMAND=(sudo)
+  else
+    echo "Administrator privileges are required. Re-run this installer as root or install sudo." >&2
+    return 1
+  fi
+}
+
+run_as_root() {
+  "${PRIVILEGE_COMMAND[@]}" "$@"
+}
+
 detect_platform_arch() {
   local os="$(uname -s)"
   local arch="$(uname -m)"
@@ -69,13 +83,13 @@ install_package() {
 
   echo "Using $package_manager to install: $@"
   case "$package_manager" in
-    apt) sudo apt update && sudo apt install -y "$@";;
-    yum) sudo yum install -y "$@";;
-    dnf) sudo dnf install -y "$@";;
-    zypper) sudo zypper install -y "$@";;
-    pacman) sudo pacman -Sy --noconfirm "$@";;
+    apt) run_as_root apt update && run_as_root apt install -y "$@";;
+    yum) run_as_root yum install -y "$@";;
+    dnf) run_as_root dnf install -y "$@";;
+    zypper) run_as_root zypper install -y "$@";;
+    pacman) run_as_root pacman -Sy --noconfirm "$@";;
     brew) brew install "$@";;
-    apk) sudo apk add "$@";;
+    apk) run_as_root apk add "$@";;
     *) echo "Unsupported package manager: $package_manager" >&2; return 1;;
   esac
 }
@@ -125,7 +139,7 @@ install_fastfetch() {
   local asset_name="fastfetch-${platform_arch}.deb"
   local url="https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/${asset_name}"
 
-  curl -L "$url" -o /tmp/fastfetch.deb && sudo apt install -y /tmp/fastfetch.deb && rm /tmp/fastfetch.deb
+  curl -L "$url" -o /tmp/fastfetch.deb && run_as_root apt install -y /tmp/fastfetch.deb && rm /tmp/fastfetch.deb
 }
 
 install_oh_my_zsh() {
@@ -160,6 +174,7 @@ change_shell_to_zsh() {
 }
 
 # === Main Install Steps ===
+configure_privilege_command
 install_package software-properties-common || true
 install_package zsh git unzip jq curl wget
 
