@@ -1,2 +1,33 @@
 clear
-neofetch
+
+fastfetch_profile=${FASTFETCH_PROFILE:-auto}
+
+if [ "$fastfetch_profile" = auto ]; then
+  if [ -n "${SSH_CONNECTION:-}${SSH_TTY:-}" ]; then
+    fastfetch_profile=server
+  elif [ "$(uname -s)" = Linux ] && [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    fastfetch_profile=server
+  else
+    fastfetch_profile=workstation
+  fi
+fi
+
+case "$fastfetch_profile" in
+  workstation)
+    fastfetch_config="$HOME/.config/fastfetch/config.jsonc"
+    ;;
+  *[!A-Za-z0-9_-]*)
+    printf 'Invalid FASTFETCH_PROFILE: %s\n' "$fastfetch_profile" >&2
+    fastfetch_config="$HOME/.config/fastfetch/config.jsonc"
+    ;;
+  *)
+    fastfetch_config="$HOME/.config/fastfetch/$fastfetch_profile.jsonc"
+    ;;
+esac
+
+if [ ! -r "$fastfetch_config" ]; then
+  printf 'Fastfetch profile not found: %s; using workstation profile.\n' "$fastfetch_config" >&2
+  fastfetch_config="$HOME/.config/fastfetch/config.jsonc"
+fi
+
+fastfetch --config "$fastfetch_config"

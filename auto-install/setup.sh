@@ -29,6 +29,9 @@ exec > >(tee -a "$LOGFILE") 2>&1
 # === Globals ===
 ZSH_CUSTOM=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
 USE_SUDO=false
+DOTFILES_REF=${DOTFILES_REF:-main}
+DOTFILES_RAW_URL="https://raw.githubusercontent.com/manix84/dotfiles_zsh/${DOTFILES_REF}"
+FASTFETCH_AVAILABLE=false
 
 # === Helpers ===
 configure_privilege_command() {
@@ -159,6 +162,11 @@ append_to_zshrc() {
   grep -qxF "$line" ~/.zshrc || echo "$line" >> ~/.zshrc
 }
 
+backup_file_once() {
+  local file="$1"
+  [[ ! -f "$file" || -e "$file.backup" ]] || cp "$file" "$file.backup"
+}
+
 install_fastfetch() {
   if command -v fastfetch >/dev/null 2>&1; then
     echo "Already installed: fastfetch"
@@ -196,8 +204,14 @@ install_oh_my_zsh() {
   append_to_zshrc 'plugins=(git z zsh-autosuggestions zsh-syntax-highlighting)'
 }
 
-install_motd() {
-  echo -e "printf '\033[2J'\nfastfetch" > ~/.motd
+install_fastfetch_configuration() {
+  mkdir -p ~/.config/fastfetch
+  backup_file_once ~/.config/fastfetch/config.jsonc
+  backup_file_once ~/.config/fastfetch/server.jsonc
+  backup_file_once ~/.motd
+  download_file "$DOTFILES_RAW_URL/.config/fastfetch/config.jsonc" --output ~/.config/fastfetch/config.jsonc
+  download_file "$DOTFILES_RAW_URL/.config/fastfetch/server.jsonc" --output ~/.config/fastfetch/server.jsonc
+  download_file "$DOTFILES_RAW_URL/.motd" --output ~/.motd
   append_to_zshrc "[[ -f ~/.motd ]] && source ~/.motd"
   chmod 0700 ~/.motd
 }
@@ -216,11 +230,14 @@ configure_privilege_command
 install_required_packages zsh git unzip jq curl wget
 
 if install_fastfetch; then
-  install_motd
+  FASTFETCH_AVAILABLE=true
 else
   echo "Fastfetch installation failed; continuing without the Fastfetch MOTD." >&2
 fi
 install_oh_my_zsh
+if [[ $FASTFETCH_AVAILABLE == true ]]; then
+  install_fastfetch_configuration
+fi
 install_nano_highlight
 change_shell_to_zsh
 

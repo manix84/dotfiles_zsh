@@ -76,6 +76,26 @@ apt-get -o Acquire::Check-Valid-Until=false update
 Archived Jessie packages no longer receive security updates. Upgrading the
 device to a supported platform remains preferable where possible.
 
+## Fastfetch profiles
+
+The installer provides two profiles:
+
+- `workstation` is the default configuration for a local laptop or desktop. It
+  includes graphical-session, GPU, battery, and power information.
+- `server` is a compact operational view for remote and headless Linux systems.
+  It focuses on uptime, CPU usage, load, memory, disks, networking, and processes.
+
+The shell MOTD selects `server` for SSH sessions and headless Linux systems, and
+`workstation` for local graphical sessions. Override the selection when needed:
+
+```bash
+FASTFETCH_PROFILE=server zsh
+```
+
+To make an override persistent, export `FASTFETCH_PROFILE` in `~/.zshrc`.
+Additional profiles can be added as `~/.config/fastfetch/<name>.jsonc` and
+selected by setting `FASTFETCH_PROFILE=<name>`.
+
 For additional details, see the [auto-install documentation](auto-install/README.md)
 or review the [installation script](auto-install/setup.sh).
 

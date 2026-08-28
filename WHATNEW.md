@@ -15,6 +15,8 @@ This file highlights user-facing changes. For the complete history, see the
   installed, with guidance for archived Debian Jessie repositories.
 - Made Fastfetch and its MOTD optional so they cannot abort the shell setup on
   legacy platforms.
+- Added automatic workstation and server Fastfetch profiles, with an explicit
+  override for future profile variants.
 - Added a clear error when a non-root user has no access to `sudo`.
 - Updated installation documentation with browser copy buttons and matching
   guidance in both README files.
