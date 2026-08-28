@@ -28,7 +28,7 @@ exec > >(tee -a "$LOGFILE") 2>&1
 
 # === Globals ===
 ZSH_CUSTOM=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
-PRIVILEGE_COMMAND=()
+USE_SUDO=false
 
 # === Helpers ===
 configure_privilege_command() {
@@ -36,7 +36,7 @@ configure_privilege_command() {
     echo "Running as root; sudo is not required."
   elif command -v sudo >/dev/null 2>&1; then
     sudo -v || { echo "Sudo authentication failed." >&2; return 1; }
-    PRIVILEGE_COMMAND=(sudo)
+    USE_SUDO=true
   else
     echo "Administrator privileges are required. Re-run this installer as root or install sudo." >&2
     return 1
@@ -44,7 +44,11 @@ configure_privilege_command() {
 }
 
 run_as_root() {
-  "${PRIVILEGE_COMMAND[@]}" "$@"
+  if [[ $USE_SUDO == true ]]; then
+    sudo "$@"
+  else
+    "$@"
+  fi
 }
 
 detect_platform_arch() {

@@ -9,9 +9,10 @@ This file highlights user-facing changes. For the complete history, see the
 
 - Added support for running the installer from an existing root shell on
   sudo-less systems such as ReadyNAS.
+- Improved compatibility with the older Bash versions found on some NAS
+  devices.
 - Added a clear error when a non-root user has no access to `sudo`.
 - Updated installation documentation with browser copy buttons and matching
   guidance in both README files.
 - Added community guidelines, structured issue forms, security reporting
   guidance, support information, and a privacy notice.
-
