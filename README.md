@@ -42,3 +42,12 @@ The installer writes a timestamped log to the current user's home directory.
 
 For additional details, see the [auto-install documentation](auto-install/README.md)
 or review the [installation script](auto-install/setup.sh).
+
+## Project information
+
+- [What's new](WHATNEW.md)
+- [Contributing](.github/CONTRIBUTING.md)
+- [Support](.github/SUPPORT.md)
+- [Security policy](.github/SECURITY.md)
+- [Privacy](PRIVACY.md)
+- [Code of conduct](.github/CODE_OF_CONDUCT.md)

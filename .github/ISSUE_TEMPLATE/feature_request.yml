@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest an improvement or support for another environment
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What limitation or repeated task would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the behavior you would like.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Relevant environment
+      description: Include the operating system, architecture, shell, or package manager when applicable.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe any current workaround.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues for this suggestion.
+          required: true
+        - label: My examples contain no private infrastructure or credentials.
+          required: true
+
