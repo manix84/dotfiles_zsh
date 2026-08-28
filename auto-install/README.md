@@ -1,28 +1,44 @@
-# Auto-Install (WIP)
-Run the following to pull down and install these dotfiles automatically.
+# ZSH Dotfiles Auto-install
 
-## One-Step Automated Install
-Those who want to get started quickly and conveniently may run terminal-setup using the following command:
+An automated terminal setup for macOS and Linux. The installer sets up Zsh,
+Oh My Zsh, the Bullet Train theme, useful Zsh plugins, Fastfetch, and Nano
+syntax highlighting.
 
-| Method    | Command                                                                                                     |
-|:----------|:------------------------------------------------------------------------------------------------------------|
-| **curl**  | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/manix84/dotfiles_zsh/main/auto-install/setup.sh)"` |
-| **wget**  | `bash -c "$(wget -O- https://raw.githubusercontent.com/manix84/dotfiles_zsh/main/auto-install/setup.sh)"`   |
-| **fetch** | `bash -c "$(fetch -o - https://raw.githubusercontent.com/manix84/dotfiles_zsh/main/auto-install/setup.sh)"` |
+## One-step install
 
-The installer supports both standard users with `sudo` and systems without
-`sudo` when it is run from an existing root shell. On a sudo-less system, first
-become root using the method provided by the device, then run one of the commands
-above. A non-root user without `sudo` cannot install the required system packages.
+Run one of the following commands. GitHub displays a copy button in the
+top-right corner of each command block.
 
-## WIP: Still needs adding ##
-- [x] https://github.com/manix84/dotfiles_zsh/issues/1
-- [x] https://github.com/manix84/dotfiles_zsh/issues/2
-  - [x] https://github.com/manix84/dotfiles_zsh/issues/3
-  - [x] https://github.com/manix84/dotfiles_zsh/issues/4
-  - [x] https://github.com/manix84/dotfiles_zsh/issues/5
-- [ ] https://github.com/manix84/dotfiles_zsh/issues/6
-- [ ] https://github.com/manix84/dotfiles_zsh/issues/7
+### curl
 
-**Later improvements/optimisations**
-- [ ] https://github.com/manix84/dotfiles_zsh/issues/8
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/manix84/dotfiles_zsh/main/auto-install/setup.sh)"
+```
+
+### wget
+
+```bash
+bash -c "$(wget -O- https://raw.githubusercontent.com/manix84/dotfiles_zsh/main/auto-install/setup.sh)"
+```
+
+### fetch
+
+```bash
+bash -c "$(fetch -o - https://raw.githubusercontent.com/manix84/dotfiles_zsh/main/auto-install/setup.sh)"
+```
+
+## Administrator access
+
+Installing the required system packages needs administrator privileges:
+
+- For a standard user, the installer uses `sudo` and asks for authentication.
+- On a sudo-less system such as a ReadyNAS, enter a root shell first and then
+  run one of the installation commands above. When already running as root, the
+  installer executes package-manager commands directly without `sudo`.
+- A non-root user on a system without `sudo` cannot install the required system
+  packages.
+
+The installer writes a timestamped log to the current user's home directory.
+
+Return to the [project overview](../README.md) or review the
+[installation script](setup.sh).
