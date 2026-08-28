@@ -22,6 +22,12 @@ was written for this script.
 
 DISCLAIMER
 
+# Capture this before logging redirects stdout through tee.
+INTERACTIVE_TERMINAL=false
+if [[ -t 0 && -t 1 ]]; then
+  INTERACTIVE_TERMINAL=true
+fi
+
 # === Logging ===
 LOGFILE=~/setup-$(date +%Y%m%d%H%M).log
 exec > >(tee -a "$LOGFILE") 2>&1
@@ -151,7 +157,7 @@ change_shell_to_zsh() {
 }
 
 start_zsh() {
-  if [[ -t 0 && -t 1 ]]; then
+  if [[ $INTERACTIVE_TERMINAL == true ]]; then
     echo "Setup complete. Starting a fresh Zsh login shell."
     exec zsh -l
   fi
