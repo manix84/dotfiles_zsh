@@ -139,7 +139,24 @@ install_nano_highlight() {
 }
 
 change_shell_to_zsh() {
-  [[ $SHELL != *zsh ]] && chsh -s "$(which zsh)"
+  local zsh_path=""
+  zsh_path=$(command -v zsh)
+
+  if [[ ${SHELL:-} == *zsh ]]; then
+    echo "Zsh is already the login shell."
+    return 0
+  fi
+
+  chsh -s "$zsh_path"
+}
+
+start_zsh() {
+  if [[ -t 0 && -t 1 ]]; then
+    echo "Setup complete. Starting a fresh Zsh login shell."
+    exec zsh -l
+  fi
+
+  echo "Setup complete. Start Zsh with: zsh -l"
 }
 
 # === Main Install Steps ===
@@ -148,4 +165,4 @@ install_fastfetch_configuration
 install_nano_highlight
 change_shell_to_zsh
 
-zsh
+start_zsh

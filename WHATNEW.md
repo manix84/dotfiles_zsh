@@ -19,6 +19,8 @@ This file highlights user-facing changes. For the complete history, see the
   legacy platforms.
 - Skipped incompatible Fastfetch downloads on Debian Jessie and made existing
   Oh My Zsh installations reusable on repeated installer runs.
+- Fixed early exit when Zsh was already the login shell and now activate the
+  refreshed Oh My Zsh configuration immediately after interactive setup.
 - Added automatic workstation and server Fastfetch profiles, with an explicit
   override for future profile variants.
 - Organized Fastfetch output into clear identity, session, performance,

@@ -43,6 +43,9 @@ Fastfetch and its MOTD are optional; a failure to install Fastfetch does not
 prevent the remaining shell setup from completing. Fastfetch is skipped on
 Debian Jessie because current releases require a newer system C library.
 
+At the end of an interactive run, the installer starts a fresh Zsh login shell
+so the updated Oh My Zsh configuration takes effect immediately.
+
 The installer is safe to rerun over a valid existing Oh My Zsh installation.
 An existing directory that does not contain Oh My Zsh is left untouched and
 reported for manual review.
@@ -80,6 +83,11 @@ apt-get -o Acquire::Check-Valid-Until=false update
 
 Archived Jessie packages no longer receive security updates. Upgrading the
 device to a supported platform remains preferable where possible.
+
+The official Fastfetch ARMv7 binaries require glibc 2.34, while Jessie provides
+glibc 2.19. The installer will not replace this core system library because doing
+so could break the ReadyNAS operating system. Supporting Fastfetch there requires
+a separately maintained ARMv7 binary built against the legacy Jessie runtime.
 
 ## Fastfetch profiles
 
