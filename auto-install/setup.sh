@@ -181,11 +181,19 @@ install_fastfetch() {
     return 0
   fi
 
-  local version=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | jq -r '.name')
   local asset_name="fastfetch-${platform_arch}.deb"
-  local url="https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/${asset_name}"
+  local url="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/${asset_name}"
 
-  curl -L "$url" -o /tmp/fastfetch.deb && run_as_root apt install -y /tmp/fastfetch.deb && rm /tmp/fastfetch.deb
+  if ! curl -fL "$url" -o /tmp/fastfetch.deb; then
+    return 1
+  fi
+
+  if ! run_as_root apt install -y /tmp/fastfetch.deb; then
+    rm -f /tmp/fastfetch.deb
+    return 1
+  fi
+
+  rm -f /tmp/fastfetch.deb
 }
 
 install_oh_my_zsh() {
@@ -227,7 +235,7 @@ change_shell_to_zsh() {
 
 # === Main Install Steps ===
 configure_privilege_command
-install_required_packages zsh git unzip jq curl wget
+install_required_packages zsh git unzip curl wget
 
 if install_fastfetch; then
   FASTFETCH_AVAILABLE=true

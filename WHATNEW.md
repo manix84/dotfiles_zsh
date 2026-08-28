@@ -13,6 +13,8 @@ This file highlights user-facing changes. For the complete history, see the
   devices.
 - Avoided unnecessary package-manager calls when required commands are already
   installed, with guidance for archived Debian Jessie repositories.
+- Removed the unnecessary `jq` dependency so legacy systems do not need to
+  access archived package repositories just to resolve a Fastfetch release.
 - Made Fastfetch and its MOTD optional so they cannot abort the shell setup on
   legacy platforms.
 - Added automatic workstation and server Fastfetch profiles, with an explicit
