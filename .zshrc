@@ -2,7 +2,7 @@
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/rob/.oh-my-zsh"
+export ZSH="${ZSH:-$HOME/.oh-my-zsh}"
 
 ZSH_DISABLE_COMPFIX="true"
 
@@ -70,7 +70,7 @@ HIST_STAMPS="dd/mm/yyyy"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(git z zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -96,7 +96,7 @@ ENABLE_CORRECTION="true"
 DISABLE_UPDATE_PROMPT="true"
 DISABLE_AUTO_UPDATE="false"
 
-[ -f ~/.motd ] && ~/.motd
+[[ -f ~/.motd ]] && source ~/.motd
 
 BULLETTRAIN_PROMPT_ORDER=(
   time
@@ -118,8 +118,11 @@ BULLETTRAIN_PROMPT_ORDER=(
   cmd_exec_time
 )
 
-# Set up fzf key bindings and fuzzy completion
-source <(fzf --zsh)
+# Set up fzf key bindings and fuzzy completion when supported by this version.
+if command -v fzf >/dev/null 2>&1 && fzf --help 2>&1 | grep -q -- '--zsh'; then
+  source <(fzf --zsh)
+fi
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 test -e "${HOME}/.sh_functions" && source "${HOME}/.sh_functions"
+[[ "$(uname -s)" == "Darwin" && -f "${HOME}/.osx_functions" ]] && source "${HOME}/.osx_functions"

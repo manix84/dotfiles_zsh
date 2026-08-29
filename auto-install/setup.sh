@@ -38,9 +38,21 @@ ZSH_CUSTOM=${ZSH_CUSTOM:-$ZSH_INSTALL_DIR/custom}
 USE_SUDO=false
 DOTFILES_REF=${DOTFILES_REF:-main}
 DOTFILES_RAW_URL="https://raw.githubusercontent.com/manix84/dotfiles_zsh/${DOTFILES_REF}"
-FASTFETCH_AVAILABLE=false
+INSTALL_MODE=fresh
+INSTALL_MARKER="$HOME/.dotfiles_zsh-installed"
 
 # === Helpers ===
+detect_install_mode() {
+  if [[ -e "$INSTALL_MARKER" || -e "$ZSH_INSTALL_DIR" || -e "$HOME/.zshrc" || \
+        -e "$HOME/.sh_functions" || -e "$HOME/.osx_functions" || -e "$HOME/.gitconfig" ]]; then
+    INSTALL_MODE=upgrade
+    echo "Existing shell setup detected; running in upgrade mode."
+    echo "Existing dotfiles will be preserved and only missing files will be installed."
+  else
+    echo "No existing shell setup detected; running in fresh-install mode."
+  fi
+}
+
 is_debian_jessie() {
   [[ -r /etc/os-release ]] && grep -Eq '^(VERSION_CODENAME=jessie|VERSION_ID="?8)' /etc/os-release
 }
@@ -168,14 +180,38 @@ execute_online_script() {
   fi
 }
 
-append_to_zshrc() {
-  local line="$1"
-  grep -qxF "$line" ~/.zshrc || echo "$line" >> ~/.zshrc
+install_dotfile() {
+  local relative_path="$1"
+  local target="$HOME/$relative_path"
+  local temporary_file="${target}.dotfiles_zsh.tmp.$$"
+
+  if [[ $INSTALL_MODE == upgrade && -e "$target" ]]; then
+    echo "Preserving existing dotfile: $target"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$target")"
+  download_file "$DOTFILES_RAW_URL/$relative_path" --output "$temporary_file"
+  mv "$temporary_file" "$target"
+  [[ $relative_path != .motd ]] || chmod 0700 "$target"
+  echo "Installed dotfile: $target"
 }
 
-backup_file_once() {
-  local file="$1"
-  [[ ! -f "$file" || -e "$file.backup" ]] || cp "$file" "$file.backup"
+install_dotfiles() {
+  install_dotfile .zshrc
+  install_dotfile .sh_functions
+  install_dotfile .osx_functions
+  install_dotfile .gitconfig
+  install_dotfile .gitignore
+  install_dotfile .gitattributes
+  install_dotfile .motd
+  install_dotfile .config/fastfetch/config.jsonc
+  install_dotfile .config/fastfetch/server.jsonc
+}
+
+record_install() {
+  printf 'dotfiles_ref=%s\ninstalled_at=%s\n' \
+    "$DOTFILES_REF" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$INSTALL_MARKER"
 }
 
 install_fastfetch() {
@@ -225,28 +261,8 @@ install_oh_my_zsh() {
 
   download_file http://raw.github.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme --output=$ZSH_CUSTOM/themes/bullet-train.zsh-theme
 
-  [[ -f ~/.zshrc ]] && cp ~/.zshrc ~/.zshrc.backup
-  sed -i.bak 's/ZSH_THEME=\"[^"]*\"/ZSH_THEME=\"bullet-train\"/' ~/.zshrc
-
-  append_to_zshrc 'ENABLE_CORRECTION="true"'
-  append_to_zshrc 'DISABLE_UPDATE_PROMPT="true"'
-  append_to_zshrc 'DISABLE_AUTO_UPDATE="false"'
-
   git clone https://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions || true
   git clone https://github.com/zsh-users/zsh-syntax-highlighting $ZSH_CUSTOM/plugins/zsh-syntax-highlighting || true
-  append_to_zshrc 'plugins=(git z zsh-autosuggestions zsh-syntax-highlighting)'
-}
-
-install_fastfetch_configuration() {
-  mkdir -p ~/.config/fastfetch
-  backup_file_once ~/.config/fastfetch/config.jsonc
-  backup_file_once ~/.config/fastfetch/server.jsonc
-  backup_file_once ~/.motd
-  download_file "$DOTFILES_RAW_URL/.config/fastfetch/config.jsonc" --output ~/.config/fastfetch/config.jsonc
-  download_file "$DOTFILES_RAW_URL/.config/fastfetch/server.jsonc" --output ~/.config/fastfetch/server.jsonc
-  download_file "$DOTFILES_RAW_URL/.motd" --output ~/.motd
-  append_to_zshrc "[[ -f ~/.motd ]] && source ~/.motd"
-  chmod 0700 ~/.motd
 }
 
 install_nano_highlight() {
@@ -276,19 +292,17 @@ start_zsh() {
 }
 
 # === Main Install Steps ===
+detect_install_mode
 configure_privilege_command
 install_required_packages zsh git unzip curl wget
 
-if install_fastfetch; then
-  FASTFETCH_AVAILABLE=true
-else
+if ! install_fastfetch; then
   echo "Fastfetch installation failed; continuing without the Fastfetch MOTD." >&2
 fi
 install_oh_my_zsh
-if [[ $FASTFETCH_AVAILABLE == true ]]; then
-  install_fastfetch_configuration
-fi
+install_dotfiles
 install_nano_highlight
 change_shell_to_zsh
+record_install
 
 start_zsh

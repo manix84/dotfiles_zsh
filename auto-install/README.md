@@ -1,8 +1,8 @@
 # ZSH Dotfiles Auto-install
 
-An automated terminal setup for macOS and Linux. The installer sets up Zsh,
-Oh My Zsh, the Bullet Train theme, useful Zsh plugins, Fastfetch, and Nano
-syntax highlighting.
+An automated terminal setup for macOS and Linux. The installer deploys the
+tracked dotfiles and sets up Zsh, Oh My Zsh, the Bullet Train theme, useful Zsh
+plugins, Fastfetch, and Nano syntax highlighting.
 
 ## One-step install
 
@@ -46,9 +46,20 @@ Debian Jessie because current releases require a newer system C library.
 At the end of an interactive run, the installer starts a fresh Zsh login shell
 so the updated Oh My Zsh configuration takes effect immediately.
 
-The installer is safe to rerun over a valid existing Oh My Zsh installation.
-An existing directory that does not contain Oh My Zsh is left untouched and
-reported for manual review.
+## Fresh installs and upgrades
+
+On a fresh account, the installer copies the project's `.zshrc`, shell
+functions, Git configuration, global Git ignore/attributes files, MOTD, and
+Fastfetch profiles into the matching paths under the home directory.
+
+If it detects an existing shell setup, it switches to upgrade mode. Existing
+dotfiles are preserved and only missing files are installed, so rerunning the
+installer does not replace local customizations. A successful run records the
+installed ref and timestamp in `~/.dotfiles_zsh-installed`; accounts installed
+by older versions are also recognized from their existing Zsh or dotfiles.
+
+A valid existing Oh My Zsh installation is reused. An existing directory that
+does not contain Oh My Zsh is left untouched and reported for manual review.
 
 ### ReadyNAS OS 6 and Debian Jessie
 

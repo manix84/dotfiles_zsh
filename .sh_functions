@@ -201,3 +201,36 @@ function killport() {
     echo "$PIDS" | xargs kill -9
   fi
 }
+
+# Retry an SSH connection until it succeeds or the user presses Ctrl-C.
+function sshwait() {
+	if (( $# == 0 )) || [[ "$1" == "-h" || "$1" == "--help" ]]; then
+		cat <<'EOF'
+Usage: sshwait [SSH_OPTIONS] DESTINATION [COMMAND]
+
+Repeatedly attempts an SSH connection, waiting 3 seconds after each
+failure. Once connected, it behaves like a normal SSH session and exits
+when that session ends.
+
+Examples:
+  sshwait rob@server.local
+  sshwait -p 2222 user@example.com
+  sshwait server.example.com uptime
+
+Press Ctrl-C to stop retrying.
+EOF
+		return
+	fi
+
+	local start_time=$SECONDS
+
+	while ! command ssh "$@"; do
+		local elapsed=$(( SECONDS - start_time ))
+		local minutes=$(( elapsed / 60 ))
+		local seconds=$(( elapsed % 60 ))
+
+		printf 'SSH connection failed; retrying in 3 seconds... (elapsed: %02d:%02d)\n' \
+			"$minutes" "$seconds"
+		sleep 3
+	done
+}
