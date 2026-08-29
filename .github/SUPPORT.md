@@ -13,4 +13,3 @@ hostnames, IP addresses, usernames, and private paths.
 
 For security vulnerabilities, follow the [security policy](SECURITY.md) instead
 of opening a public support request.
-

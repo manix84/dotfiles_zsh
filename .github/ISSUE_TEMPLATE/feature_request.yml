@@ -37,4 +37,3 @@ body:
           required: true
         - label: My examples contain no private infrastructure or credentials.
           required: true
-

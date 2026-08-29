@@ -21,4 +21,3 @@ Do not disclose sensitive conduct reports in a public issue. Use GitHub's
 private reporting tools when available, or report abusive content directly to
 [GitHub Support](https://support.github.com/). Maintainers will review reports
 fairly and protect reporters' privacy as far as reasonably possible.
-

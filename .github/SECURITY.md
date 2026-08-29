@@ -18,4 +18,3 @@ asks the maintainer to enable it without disclosing vulnerability details.
 You should receive an acknowledgement when the report is reviewed. Resolution
 time will depend on severity and maintainer availability. Please allow time for
 a fix before publishing details.
-

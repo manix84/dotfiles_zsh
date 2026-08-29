@@ -3,4 +3,3 @@ contact_links:
   - name: Security report
     url: https://github.com/manix84/dotfiles_zsh/security/policy
     about: Read the security policy before reporting a vulnerability.
-

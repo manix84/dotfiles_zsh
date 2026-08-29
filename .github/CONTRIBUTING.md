@@ -24,4 +24,3 @@ shell, package manager, command used, and the smallest useful error excerpt.
 
 By contributing, you agree that your contribution is licensed under the
 project's [MIT License](../LICENSE).
-

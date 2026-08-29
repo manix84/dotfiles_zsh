@@ -59,4 +59,3 @@ body:
           required: true
         - label: I removed private information and credentials.
           required: true
-

@@ -36,4 +36,3 @@ for details about GitHub's handling of that information.
 ## Changes
 
 Material changes to this notice will be recorded in [What's New](WHATNEW.md).
-
