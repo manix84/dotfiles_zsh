@@ -1,0 +1,30 @@
+# Aliases for macOS commands and applications.
+
+alias o='open'
+alias oo='open .'
+
+# Copy stdin without newline characters.
+alias c="tr -d '\n' | pbcopy"
+
+# Remove Finder metadata below the current directory.
+alias cleanup="find . -type f -name '*.DS_Store' -ls -delete"
+
+# Refresh macOS name-service caches.
+alias flush='sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder'
+
+# Rebuild LaunchServices registrations to remove duplicate Open With entries.
+alias lscleanup='/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user && killall Finder'
+
+# Finder visibility controls.
+alias show='defaults write com.apple.Finder AppleShowAllFiles -bool true && killall Finder'
+alias hide='defaults write com.apple.Finder AppleShowAllFiles -bool false && killall Finder'
+alias hidedesktop='defaults write com.apple.finder CreateDesktop -bool false && killall Finder'
+alias showdesktop='defaults write com.apple.finder CreateDesktop -bool true && killall Finder'
+
+# Spotlight indexing controls.
+alias spotoff='sudo mdutil -a -i off'
+alias spoton='sudo mdutil -a -i on'
+
+alias plistbuddy='/usr/libexec/PlistBuddy'
+alias stfu="osascript -e 'set volume output muted true'"
+alias pumpitup="osascript -e 'set volume output volume 100'"

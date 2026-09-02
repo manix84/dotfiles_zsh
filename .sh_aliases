@@ -1,0 +1,52 @@
+# Aliases that work in both Bash and Zsh.
+
+# Navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+
+# Shortcuts
+alias g='git'
+alias h='history'
+alias j='jobs'
+alias v='vim'
+alias gurl='curl --compressed'
+
+# Use the native colour option supported by the installed ls implementation.
+if command ls --color=auto -d . >/dev/null 2>&1; then
+  _ls_color_flag='--color=auto'
+elif command ls -G -d . >/dev/null 2>&1; then
+  _ls_color_flag='-G'
+else
+  _ls_color_flag=''
+fi
+
+alias ls="command ls ${_ls_color_flag}"
+alias l="command ls -lh ${_ls_color_flag}"
+alias la="command ls -lAh ${_ls_color_flag}"
+alias lr="command ls -lAhR ${_ls_color_flag}"
+alias lsd="command ls -l ${_ls_color_flag} | grep '^d'"
+unset _ls_color_flag
+
+# Expand aliases in the command that follows sudo.
+alias sudo='sudo '
+
+# Portable command-name fallbacks, only when the replacement exists.
+if ! command -v hd >/dev/null 2>&1 && command -v hexdump >/dev/null 2>&1; then
+  alias hd='hexdump -C'
+fi
+if ! command -v md5sum >/dev/null 2>&1 && command -v md5 >/dev/null 2>&1; then
+  alias md5sum='md5'
+fi
+if ! command -v sha1sum >/dev/null 2>&1 && command -v shasum >/dev/null 2>&1; then
+  alias sha1sum='shasum'
+fi
+
+alias ip='dig +short myip.opendns.com @resolver1.opendns.com'
+alias rot13='tr a-zA-Z n-za-mN-ZA-M'
+alias badge='tput bel'
+
+# Terminal automatic-margin mode controls line wrapping.
+alias wrap_on='tput smam'
+alias wrap_off='tput rmam'

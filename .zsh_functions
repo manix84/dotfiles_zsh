@@ -1,0 +1,4 @@
+# Functions that rely specifically on Zsh belong in this file.
+#
+# There are currently no Zsh-only functions. Keeping this extension point
+# separate prevents shell-specific implementations leaking into .sh_functions.

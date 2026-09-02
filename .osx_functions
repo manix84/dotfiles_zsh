@@ -1,7 +1,51 @@
 
+function _osx_function_help() {
+	case "$1" in
+		note) cat <<'EOF'
+Usage: note TEXT
+       command | note
+Create an iCloud Notes.app note from TEXT or piped input. Requires macOS,
+Notes.app, an iCloud Notes account, and Automation permission for the terminal.
+EOF
+		;;
+		remind) cat <<'EOF'
+Usage: remind TEXT
+       command | remind
+Create an item in the default Reminders.app list from TEXT or piped input.
+Requires macOS and Automation permission for the terminal.
+EOF
+		;;
+		server) cat <<'EOF'
+Usage: server [PORT]
+Serve the current directory over HTTP on PORT (default: 8000) and open it in
+the default macOS browser. This legacy implementation requires Python 2.
+EOF
+		;;
+		phpserver) cat <<'EOF'
+Usage: phpserver [PORT]
+Serve the current directory with PHP on the en1 address and PORT (default:
+4000), then open it in the default browser. Requires PHP and an en1 address.
+EOF
+		;;
+		unquarantine) cat <<'EOF'
+Usage: unquarantine PATH...
+Recursively remove macOS download-origin and quarantine extended attributes
+from PATH. Only use this after independently verifying the downloaded content.
+EOF
+		;;
+		mount_ssh) cat <<'EOF'
+Usage: mount_ssh [USER@]HOST:/REMOTE/PATH [VOLUME_NAME]
+Mount an SSH location beneath /Network using SSHFS. Existing mount directories
+prompt before forced unmounting. Requires macOS, SSHFS, and administrator access.
+EOF
+		;;
+	esac
+}
+
 # Add note to Notes.app (OS X 10.8)
 # Usage: `note 'foo'` or `echo 'foo' | note`
 function note() {
+	if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then _osx_function_help note; return; fi
 	local text
 	if [ -t 0 ]; then # argument
 		text="$1"
@@ -23,6 +67,7 @@ EOF
 # Add reminder to Reminders.app (OS X 10.8)
 # Usage: `remind 'foo'` or `echo 'foo' | remind`
 function remind() {
+	if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then _osx_function_help remind; return; fi
 	local text
 	if [ -t 0 ]; then
 		text="$1" # argument
@@ -36,4 +81,87 @@ tell application "Reminders"
 	end tell
 end tell
 EOF
+}
+
+# Start an HTTP server from a directory, optionally specifying the port
+function server() {
+	if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then _osx_function_help server; return; fi
+	local port="${1:-8000}"
+	sleep 1 && open "http://localhost:${port}/" &
+	# Set the default Content-Type to `text/plain` instead of `application/octet-stream`
+	# And serve everything as UTF-8 (although not technically correct, this doesn’t break anything for binary files)
+	python -c $'import SimpleHTTPServer;\nmap = SimpleHTTPServer.SimpleHTTPRequestHandler.extensions_map;\nmap[""] = "text/plain";\nfor key, value in map.items():\n\tmap[key] = value + ";charset=UTF-8";\nSimpleHTTPServer.test();' "$port"
+}
+
+# Start a PHP server from a directory, optionally specifying the port
+# (Requires PHP 5.4.0+.)
+function phpserver() {
+	if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then _osx_function_help phpserver; return; fi
+	local port="${1:-4000}"
+	local ip=$(ipconfig getifaddr en1)
+	sleep 1 && open "http://${ip}:${port}/" &
+	php -S "${ip}:${port}"
+}
+
+# Manually remove a downloaded app or file from the quarantine
+function unquarantine() {
+	if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then _osx_function_help unquarantine; return; fi
+	for attribute in com.apple.metadata:kMDItemDownloadedDate com.apple.metadata:kMDItemWhereFroms com.apple.quarantine; do
+		xattr -r -d "$attribute" "$@"
+	done
+}
+
+# Usage: mount_ssh [your_username@]some.server.com:/path/to/mount "[Your Server Name]"
+function mount_ssh() {
+	if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then _osx_function_help mount_ssh; return; fi
+    # Ensure SSHFS is installed before trying to run any commands.
+    if ! type sshfs >/dev/null 2>&1; then
+        echo "SSHFS is required to run this command."
+        echo "If you have Homebrew installed, please run \"brew install sshfs\""
+        return
+    fi
+
+    local connectionPattern="((.*)@)?(.*)(:(.*))?"
+    local remoteHost
+    local friendlyName
+    if [[ -n "${1}" && ${1} =~ ${connectionPattern} ]]; then
+        remoteHost=${BASH_REMATCH[3]}
+        friendlyName=`expr "${remoteHost}" : '\([0-9A-Za-z_-]\{1,30\}\)'`
+    else
+        echo "A host name is required"
+        return
+    fi
+
+    # Auto requesting sudo access as it is required for the creation and alteration of the Network folder.
+    sudo -v
+
+    local directoryName=/Network/${friendlyName}
+    local volumeName="${friendlyName} (SSHFS)"
+    if [[ -n "${2}" ]]; then
+        local volumeName=${2}
+    fi
+
+    if [ -d ${directoryName} ]; then
+        read -p "\"${directoryName}\" already exists. Would you like to remount it? [y/N]: " yn
+        case $yn in
+            [Yy]* )
+                cd
+                sudo umount -f ${directoryName};;
+            * )
+                echo "Exiting...";
+                return;;
+        esac
+    fi
+
+    # An ugly chain of dependant commands. If the command previous to each fails, something has gone
+    #   wrong and we need to stop.
+    sudo mkdir -p ${directoryName} &&
+    sudo chown ${USER} ${directoryName} &&
+    sudo chmod 0755 ${directoryName} &&
+
+    sshfs ${1} ${directoryName} -o follow_symlinks,compression=yes,volname="${volumeName}" &&
+    cd ${directoryName} &&
+    echo "${remoteHost} mounted to ${directoryName}, named \"${volumeName}\"" && return
+
+    echo "${remoteHost} failed to mount."
 }

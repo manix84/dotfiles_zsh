@@ -1,0 +1,4 @@
+# Shell-theme selection shared by Bash and Zsh.
+# Change either value to select another theme supported by its shell framework.
+DOTFILES_BASH_THEME=${DOTFILES_BASH_THEME:-powerbash10k}
+DOTFILES_ZSH_THEME=${DOTFILES_ZSH_THEME:-powerlevel10k/powerlevel10k}

@@ -4,13 +4,15 @@
 # Path to your oh-my-zsh installation.
 export ZSH="${ZSH:-$HOME/.oh-my-zsh}"
 
+[[ -r "${HOME}/.sh_theme" ]] && source "${HOME}/.sh_theme"
+
 ZSH_DISABLE_COMPFIX="true"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="bullet-train"
+ZSH_THEME="${DOTFILES_ZSH_THEME:-powerlevel10k/powerlevel10k}"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -30,6 +32,7 @@ ZSH_THEME="bullet-train"
 
 # Uncomment the following line to automatically update without prompting.
 DISABLE_UPDATE_PROMPT="true"
+DISABLE_AUTO_UPDATE="false"
 
 # Uncomment the following line to change how often to auto-update (in days).
 # export UPDATE_ZSH_DAYS=13
@@ -72,57 +75,48 @@ HIST_STAMPS="dd/mm/yyyy"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git z zsh-autosuggestions zsh-syntax-highlighting)
 
-source $ZSH/oh-my-zsh.sh
-
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-ENABLE_CORRECTION="true"
-DISABLE_UPDATE_PROMPT="true"
-DISABLE_AUTO_UPDATE="false"
-
-[[ -f ~/.motd ]] && source ~/.motd
-
-BULLETTRAIN_PROMPT_ORDER=(
-  time
-  status
-  custom
+typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
   context
   dir
-  screen
-  perl
-  ruby
   virtualenv
-  nvm
-  aws
-  go
-  rust
-  elixir
-  git
-  hg
-  cmd_exec_time
+  pyenv
+  rbenv
+  vcs
+  newline
+  prompt_char
 )
+
+typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(
+  status
+  command_execution_time
+  time
+)
+
+typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
+typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_THRESHOLD=1
+typeset -g POWERLEVEL9K_TIME_FORMAT='%D{%H:%M:%S}'
+typeset -g POWERLEVEL9K_CONTEXT_{DEFAULT,SUDO}_{CONTENT,VISUAL_IDENTIFIER}_EXPANSION=
+
+if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
+  source "$ZSH/oh-my-zsh.sh"
+fi
+
+# User configuration
 
 # Set up fzf key bindings and fuzzy completion when supported by this version.
 if command -v fzf >/dev/null 2>&1 && fzf --help 2>&1 | grep -q -- '--zsh'; then
   source <(fzf --zsh)
 fi
 
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-test -e "${HOME}/.sh_functions" && source "${HOME}/.sh_functions"
-[[ "$(uname -s)" == "Darwin" && -f "${HOME}/.osx_functions" ]] && source "${HOME}/.osx_functions"
+[[ -r "${HOME}/.iterm2_shell_integration.zsh" ]] && source "${HOME}/.iterm2_shell_integration.zsh"
+
+[[ -r "${HOME}/.motd" ]] && source "${HOME}/.motd"
+[[ -r "${HOME}/.sh_functions" ]] && source "${HOME}/.sh_functions"
+[[ -r "${HOME}/.sh_aliases" ]] && source "${HOME}/.sh_aliases"
+[[ -r "${HOME}/.zsh_functions" ]] && source "${HOME}/.zsh_functions"
+[[ -r "${HOME}/.zsh_aliases" ]] && source "${HOME}/.zsh_aliases"
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  [[ -r "${HOME}/.osx_functions" ]] && source "${HOME}/.osx_functions"
+  [[ -r "${HOME}/.osx_aliases" ]] && source "${HOME}/.osx_aliases"
+fi

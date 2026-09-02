@@ -1,0 +1,10 @@
+# Aliases that rely on Zsh syntax or builtins.
+
+# Print the complete Zsh history, including timestamps configured by .zshrc.
+alias history-all='fc -l 1'
+
+# Add a screen-height gap without replacing the standard clear command.
+alias cclear='repeat "$(tput lines)" printf "\n"; command clear'
+
+# Reload the interactive Zsh configuration.
+alias zsh-reload='source "${HOME}/.zshrc"'
