@@ -7,6 +7,9 @@ This file highlights user-facing changes. For the complete history, see the
 
 ### Added
 
+- Added default Linux Avahi installation, mDNS hostname resolution, and service startup.
+- Added Homebrew bootstrap and persistent Bash/Zsh environment setup.
+
 - Added automatic or explicit Bash/Zsh selection with `--shell`, `--bash`, and
   `--zsh` installer options.
 - Added an Oh My Bash configuration using the Powerbash10k theme, plus

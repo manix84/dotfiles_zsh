@@ -229,6 +229,140 @@ install_required_packages() {
   fi
 }
 
+# Add mDNS before DNS without replacing other resolver configuration.
+configure_mdns_resolution() {
+  local config="${1:-/etc/nsswitch.conf}"
+  local temporary_file=""
+  [[ -f "$config" ]] || { echo "No $config; configure .local resolution manually." >&2; return 1; }
+  if grep -Eq '^[[:space:]]*hosts:.*[[:space:]]mdns' "$config"; then
+    return 0
+  fi
+  if [[ "$config" == /etc/nsswitch.conf ]] && command -v authselect >/dev/null 2>&1; then
+    run_as_root authselect enable-feature with-mdns4
+    return $?
+  fi
+  temporary_file=$(mktemp)
+  if ! awk '
+    /^[[:space:]]*hosts:/ {
+      if (match($0, /[[:space:]]dns([[:space:]]|$)/)) {
+        $0 = substr($0, 1, RSTART) "mdns4_minimal [NOTFOUND=return] " substr($0, RSTART + 1)
+      } else {
+        if (match($0, /[[:space:]]*#/)) {
+          $0 = substr($0, 1, RSTART - 1) " mdns4_minimal [NOTFOUND=return] " substr($0, RSTART)
+        } else {
+          $0 = $0 " mdns4_minimal [NOTFOUND=return]"
+        }
+      }
+      found=1
+    }
+    { print }
+    END { if (!found) exit 1 }
+  ' "$config" > "$temporary_file"; then
+    rm -f "$temporary_file"
+    return 1
+  fi
+  if ! run_as_root cp -p "$config" "$config.dotfiles-backup" ||
+      ! run_as_root sh -c 'cat "$1" > "$2"' _ "$temporary_file" "$config"; then
+    rm -f "$temporary_file"
+    return 1
+  fi
+  rm -f "$temporary_file"
+}
+
+install_avahi() {
+  [[ "$PLATFORM_OS" == Linux ]] || { echo "Using built-in Bonjour on macOS; skipping Avahi."; return 0; }
+  if command -v apt >/dev/null 2>&1; then
+    install_package avahi-daemon avahi-utils libnss-mdns || return 1
+  elif command -v yum >/dev/null 2>&1 || command -v dnf >/dev/null 2>&1; then
+    install_package avahi avahi-tools nss-mdns || return 1
+  elif command -v zypper >/dev/null 2>&1; then
+    install_package avahi avahi-utils nss-mdns || return 1
+  elif command -v pacman >/dev/null 2>&1; then
+    install_package avahi nss-mdns || return 1
+  elif command -v apk >/dev/null 2>&1; then
+    install_package avahi avahi-tools avahi-openrc || return 1
+    echo "Alpine uses musl: Avahi advertises this host, but NSS .local resolution is unavailable."
+  else
+    echo "No supported native package manager for Avahi." >&2
+    return 1
+  fi
+
+  if ! command -v apk >/dev/null 2>&1; then
+    configure_mdns_resolution || return 1
+  fi
+  if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
+    run_as_root systemctl enable --now avahi-daemon.service || return 1
+  elif command -v rc-update >/dev/null 2>&1; then
+    run_as_root rc-update add dbus default && run_as_root rc-service dbus start || return 1
+    run_as_root rc-update add avahi-daemon default && run_as_root rc-service avahi-daemon start || return 1
+  elif command -v update-rc.d >/dev/null 2>&1 && command -v service >/dev/null 2>&1; then
+    run_as_root update-rc.d avahi-daemon defaults && run_as_root service avahi-daemon start || return 1
+  else
+    echo "Avahi installed; enable and start avahi-daemon with this system's service manager." >&2
+    return 1
+  fi
+}
+
+find_homebrew() {
+  if command -v brew >/dev/null 2>&1; then
+    command -v brew
+    return 0
+  fi
+  local candidate=""
+  for candidate in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew; do
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+install_homebrew() {
+  local brew_path="" installer_file="" brew_environment="" arch="$(uname -m)"
+  if brew_path=$(find_homebrew); then
+    brew_environment=$("$brew_path" shellenv) || return 1
+    eval "$brew_environment"
+    return 0
+  fi
+  if [[ $EUID -eq 0 ]]; then
+    echo "Homebrew must be installed as a regular user; skipping installation in this root session." >&2
+    return 0
+  fi
+  case "$PLATFORM_OS:$arch" in
+    Darwin:arm64|Darwin:x86_64|Linux:x86_64|Linux:aarch64) ;;
+    *) echo "Skipping Homebrew on unsupported platform: $PLATFORM_OS/$arch."; return 0 ;;
+  esac
+  if [[ "$PLATFORM_OS" == Linux ]]; then
+    if is_debian_jessie; then
+      echo "Skipping Homebrew on legacy Debian Jessie."
+      return 0
+    fi
+    if command -v apt >/dev/null 2>&1; then
+      install_package build-essential procps curl file git || return 1
+    elif command -v dnf >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then
+      install_package gcc gcc-c++ make procps-ng curl file git || return 1
+    elif command -v pacman >/dev/null 2>&1; then
+      install_package base-devel procps-ng curl file git || return 1
+    elif command -v zypper >/dev/null 2>&1; then
+      install_package gcc gcc-c++ make procps curl file git || return 1
+    else
+      echo "Skipping Homebrew: unsupported Linux bootstrap environment." >&2
+      return 0
+    fi
+  fi
+  installer_file=$(mktemp)
+  if ! curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$installer_file" ||
+      ! NONINTERACTIVE=1 bash "$installer_file"; then
+    rm -f "$installer_file"
+    return 1
+  fi
+  rm -f "$installer_file"
+  brew_path=$(find_homebrew) || return 1
+  brew_environment=$("$brew_path" shellenv) || return 1
+  eval "$brew_environment"
+}
+
 download_file() {
   local url="" output=""
   while [[ "$#" -gt 0 ]]; do
@@ -377,6 +511,7 @@ install_dotfile() {
 }
 
 install_dotfiles() {
+  install_dotfile .sh_homebrew
   install_dotfile .sh_theme
   install_dotfile .sh_functions
   install_dotfile .sh_aliases
@@ -409,6 +544,14 @@ install_dotfiles() {
   install_dotfile .motd
   install_dotfile .config/fastfetch/config.jsonc
   install_dotfile .config/fastfetch/server.jsonc
+}
+
+configure_homebrew_shell() {
+  local config="$HOME/.${TARGET_SHELL}rc"
+  local source_line='[[ -r "${HOME}/.sh_homebrew" ]] && source "${HOME}/.sh_homebrew"'
+  if [[ -f "$config" && ! -L "$config" ]] && ! grep -Fqx "$source_line" "$config"; then
+    printf '\n# Homebrew environment managed by dotfiles_zsh.\n%s\n' "$source_line" >> "$config"
+  fi
 }
 
 record_install() {
@@ -546,13 +689,20 @@ parse_arguments "$@"
 resolve_target_shell
 detect_install_mode
 configure_privilege_command
+if ! install_homebrew; then
+  echo "Homebrew setup failed; continuing with native packages." >&2
+fi
 install_required_packages "$TARGET_SHELL" git unzip curl wget
+if ! install_avahi; then
+  echo "Avahi setup incomplete; .local discovery may not work. See the installation README." >&2
+fi
 
 if ! install_fastfetch; then
   echo "Fastfetch installation failed; continuing without the Fastfetch MOTD." >&2
 fi
 install_shell_framework
 install_dotfiles
+configure_homebrew_shell
 install_nano_highlight
 change_login_shell
 record_install

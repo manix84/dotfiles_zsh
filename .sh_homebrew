@@ -1,0 +1,13 @@
+# Load Homebrew in Bash and Zsh, including installations outside the current PATH.
+_dotfiles_brew=""
+if command -v brew >/dev/null 2>&1; then
+  _dotfiles_brew=$(command -v brew)
+else
+  for _dotfiles_brew in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew; do
+    [[ ! -x "$_dotfiles_brew" ]] || break
+  done
+fi
+if [[ -x "$_dotfiles_brew" ]]; then
+  eval "$("$_dotfiles_brew" shellenv)"
+fi
+unset _dotfiles_brew

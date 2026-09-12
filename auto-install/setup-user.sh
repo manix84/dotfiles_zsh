@@ -297,6 +297,7 @@ install_dotfile() {
 }
 
 install_dotfiles() {
+  install_dotfile .sh_homebrew
   install_dotfile .sh_theme
   install_dotfile .sh_functions
   install_dotfile .sh_aliases
@@ -329,6 +330,14 @@ install_dotfiles() {
   install_dotfile .motd
   install_dotfile .config/fastfetch/config.jsonc
   install_dotfile .config/fastfetch/server.jsonc
+}
+
+configure_homebrew_shell() {
+  local config="$HOME/.${TARGET_SHELL}rc"
+  local source_line='[[ -r "${HOME}/.sh_homebrew" ]] && source "${HOME}/.sh_homebrew"'
+  if [[ -f "$config" && ! -L "$config" ]] && ! grep -Fqx "$source_line" "$config"; then
+    printf '\n# Homebrew environment managed by dotfiles_zsh.\n%s\n' "$source_line" >> "$config"
+  fi
 }
 
 record_install() {
@@ -433,6 +442,7 @@ resolve_target_shell
 detect_install_mode
 install_shell_framework
 install_dotfiles
+configure_homebrew_shell
 install_nano_highlight
 change_login_shell
 record_install

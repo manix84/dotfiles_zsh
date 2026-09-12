@@ -81,6 +81,35 @@ Powerlevel10k offers some additional capabilities that Powerbash10k does not
 provide; those remain native Zsh features instead of being simulated with
 custom Bash prompt code.
 
+## Network discovery and Homebrew
+
+The standard `setup.sh` installer installs Avahi by default on Linux using the
+native package manager, adds the mDNS hostname resolver on glibc systems, and
+enables and starts the daemon with systemd, OpenRC, or Debian SysV init.
+Existing mDNS resolver entries are preserved; otherwise `/etc/nsswitch.conf`
+is backed up to `/etc/nsswitch.conf.dotfiles-backup` before adding the resolver.
+Systems managed by `authselect` use its `with-mdns4` feature instead.
+This advertises the computer as `hostname.local` on the local network and lets
+ordinary commands resolve other `.local` hosts. Alpine supports advertisement
+but does not provide glibc NSS hostname resolution. macOS uses built-in Bonjour.
+If installation or service startup fails, the installer reports it and continues;
+check `avahi-daemon` with your service manager and try `getent hosts hostname.local`
+on glibc Linux. Local multicast must be allowed by your network and firewall.
+
+The standard installer also sets up Homebrew with its official installer on
+64-bit macOS and supported Linux environments, reusing an existing installation.
+Linux build prerequisites are installed with the native package manager.
+New Homebrew installs are skipped in root sessions, on Debian Jessie, and on
+unsupported platforms. Run the installer as a regular user to install Homebrew.
+On macOS, install Xcode Command Line Tools first (`xcode-select --install`).
+Homebrew setup failures are reported and do not abort the remaining shell setup.
+
+Both installers load Homebrew through `.sh_homebrew` in Bash and Zsh, including
+on upgrades, while preserving existing shell configuration. The `setup-user.sh`
+installer only configures user files: it does not install Homebrew or Avahi.
+See [Homebrew installation requirements](https://docs.brew.sh/Installation) and
+[Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux).
+
 ## Administrator access
 
 Installing the required system packages needs administrator privileges:
